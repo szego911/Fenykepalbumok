@@ -1,0 +1,36 @@
+.login {
+  width: 100%;
+  padding-top: 40px;
+  padding-bottom: 100px;
+}
+.login a {
+  text-decoration: none;
+}
+.login-container {
+  width: 580px;
+  background: white;
+  margin: auto;
+  padding: 40px 60px;
+}
+.login-container h1 {
+  margin: 20px 0px;
+}
+.login-login {
+  margin-top: 30px;
+  color: #5c5c5c;
+  font-size: 18px;
+  font-weight: 500;
+}
+.login-login span {
+  color: #ff4141;
+  font-weight: 600;
+}
+.login-agree {
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+  gap: 20px;
+  color: #5c5c5c;
+  font-size: 18px;
+  font-weight: 500;
+}

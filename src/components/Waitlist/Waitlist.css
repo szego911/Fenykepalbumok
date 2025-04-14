@@ -1,0 +1,42 @@
+.waitlist {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.waitlist img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.waitlist h3 {
+  padding: 10px;
+  margin: 0;
+  text-align: center;
+}
+
+.button{
+  background-color: blueviolet;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px;
+}
+
+.reactions{
+  margin: auto;
+}
+
+ul{
+  margin: 0px;
+  padding: 5px;
+}
+
+.reactions>tbody>tr{
+  border: solid 1px black;
+}
+
+td{
+  padding: 5px;
+}
