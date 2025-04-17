@@ -11,6 +11,7 @@
   background: white;
   margin: auto;
   padding: 40px 60px;
+  border-radius: 16px;
 }
 .login-container h1 {
   margin: 20px 0px;
@@ -33,4 +34,31 @@
   color: #5c5c5c;
   font-size: 18px;
   font-weight: 500;
+}
+.underline-on-hover {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.underline-on-hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background-color: currentColor;
+  transition: width 0.2s ease-in-out;
+}
+
+.underline-on-hover:hover::after {
+  width: 100%;
+}
+
+.custom-bg {
+  background-color: #f2f2f2;
+}
+.poppins {
+  font-family: "Poppins", sans-serif;
 }

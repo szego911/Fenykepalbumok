@@ -15,3 +15,12 @@
 .home .title {
   width: 65vw;
 }
+
+.custom-file-upload {
+  display: inline-block;
+  cursor: pointer;
+}
+
+#real-file-input {
+  display: none;
+}

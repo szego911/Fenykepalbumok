@@ -5,11 +5,11 @@ import Sidebar from "../Sidebar/Sidebar";
 
 const Login = () => {
   return (
-    <div className="d-flex vh-100">
+    <div className="d-flex vh-100 custom-bg align-items-center">
       <Sidebar />
       <div className="login">
-        <div className="login-container">
-          <h1>Bejelentkezés</h1>
+        <div className="login-container shadow">
+          <h1 class="text-center poppins">Bejelentkezés</h1>
           <form>
             <div className="form-group">
               <label htmlFor="exampleInputEmail1">Email-cím</label>
@@ -38,7 +38,7 @@ const Login = () => {
           <p className="login-login">
             Nincs még fiókod? Regisztrálj{" "}
             <Link to="/register">
-              <span>itt</span>
+              <span class="text-primary underline-on-hover">itt</span>
             </Link>
           </p>
         </div>
