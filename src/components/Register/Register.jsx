@@ -8,55 +8,55 @@ const Presenter = () => {
     <div className="d-flex vh-100 custom-bg align-items-center">
       <Sidebar />
       <div className="login">
-        <div className="login-container shadow">
-          <h1 class="text-center poppins">Regisztráció</h1>
+        <div className="mt-20 login-container shadow">
+          <h1 className="text-center poppins">Regisztráció</h1>
           <form>
-            <div class="form-group">
-              <label for="username">Felhasználónév</label>
+            <div className="form-group">
+              <label htmlFor="username">Felhasználónév</label>
               <input
                 type="text"
-                class="form-control"
+                className="form-control"
                 id="username"
                 aria-describedby="emailHelp"
                 name="username"
               />
             </div>
-            <div class="form-group">
-              <label for="email">Email-cím</label>
+            <div className="form-group">
+              <label htmlFor="email">Email-cím</label>
               <input
                 type="email"
-                class="form-control"
+                className="form-control"
                 id="email"
                 aria-describedby="emailHelp"
                 name="email"
               />
-              <small id="emailHelp" class="form-text text-muted">
+              <small id="emailHelp" className="form-text text-muted">
                 We'll never share your email with anyone else.
               </small>
             </div>
-            <div class="form-group">
-              <label for="location">Lakcím</label>
+            <div className="form-group">
+              <label htmlFor="location">Lakcím</label>
               <input
                 type="text"
-                class="form-control"
+                className="form-control"
                 id="location"
                 name="location"
               />
             </div>
 
-            <div class="row mb-3">
-              <div class="col-md-7">
-                <div class="input-group input-group-sm">
-                  <label class="input-group-text" for="megyeSelect">
+            <div className="row mb-3">
+              <div className="col-md-7">
+                <div className="input-group input-group-sm">
+                  <label className="input-group-text" htmlFor="megyeSelect">
                     Megye
                   </label>
                   <select
-                    class="form-select"
+                    className="form-select"
                     id="county"
                     aria-label="Megye kiválasztása"
                     name="county"
                   >
-                    <option selected disabled></option>
+                    <option defaultValue disabled></option>
                     <option value="bp">Budapest</option>
                     <option value="bk">Bács-Kiskun</option>
                     <option value="baz">Borsod-Abaúj-Zemplén</option>
@@ -81,37 +81,37 @@ const Presenter = () => {
                 </div>
               </div>
 
-              <div class="col-md-5">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text" id="inputGroup-sizing-sm">
+              <div className="col-md-5">
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text" id="inputGroup-sizing-sm">
                     Irányítószám
                   </span>
                   <input
                     type="text"
-                    class="form-control"
+                    className="form-control"
                     aria-label="Irányítószám"
                     aria-describedby="inputGroup-sizing-sm"
-                    maxlength="4"
+                    maxLength="4"
                     name="zip"
                   />
                 </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="password1">Jelszó</label>
+            <div className="form-group">
+              <label htmlFor="password1">Jelszó</label>
               <input
                 type="password"
-                class="form-control"
+                className="form-control"
                 id="password1"
                 name="password1"
               />
             </div>
-            <div class="form-group">
-              <label for="password2">Jelszó megerősítése</label>
+            <div className="form-group">
+              <label htmlFor="password2">Jelszó megerősítése</label>
               <input
                 type="password"
-                class="form-control"
+                className="form-control"
                 id="password2"
                 name="password2"
               />
@@ -123,7 +123,7 @@ const Presenter = () => {
           </button>
           <div className="d-flex justify-content-end">
             <Link to="/login">
-              <span class="text-primary">Van már fiókom</span>
+              <span className="text-primary">Van már fiókom</span>
             </Link>
           </div>
         </div>

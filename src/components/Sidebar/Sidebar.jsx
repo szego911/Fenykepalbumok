@@ -14,7 +14,7 @@ const Sidebar = () => {
     document.querySelector(".sidebar").classList.toggle("is-active");
     document.querySelector(".cancel-sidebar").classList.toggle("d-n");
   }
-  function activeManu() {}
+  
   return (
     <div className="sidebar position-fixed border-end border-1 border-light">
       <div onClick={toggleMenu} className="menu-toggle">
@@ -69,6 +69,14 @@ const Sidebar = () => {
           to="/categories"
         >
           Kategóriák
+        </NavLink>
+        <NavLink
+          exact="true"
+          activeclassname="active"
+          className="menu-item"
+          to="/register"
+        >
+          Regisztráció
         </NavLink>
       </nav>
     </div>
