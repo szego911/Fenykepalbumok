@@ -1,9 +1,8 @@
 import React from "react";
-import "./BestImages.css";
+import "./Categories.css";
 import Sidebar from "../Sidebar/Sidebar";
 
-
-const BestImages = () => {
+const Categories = () => {
   return (
     <div className="home-page d-flex">
       <Sidebar />
@@ -21,16 +20,11 @@ const BestImages = () => {
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
 
-       
-
           <h1 className="flex-grow-1 text-center m-3">Reactions</h1>
-
-          
-          
         </div>
       </div>
     </div>
   );
 };
 
-export default BestImages;
+export default Categories;

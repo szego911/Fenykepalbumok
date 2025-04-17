@@ -113,6 +113,10 @@
   color: #3bba9c;
 }
 
+hr {
+  background-color: black;
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     max-width: 200px;
