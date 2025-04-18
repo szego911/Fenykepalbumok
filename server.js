@@ -1,6 +1,9 @@
 import express from "express";
 import oracledb from "oracledb";
 import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 import bcrypt from "bcrypt";
 
 const app = express();
@@ -19,6 +22,24 @@ const connectDB = async () => {
       "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1522))(CONNECT_DATA=(SID=orania2)))",
   });
 };
+
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 5 * 1024 * 1024 }, // max 5 MB
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = filetypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error("❌ Csak JPG vagy PNG fájl engedélyezett"));
+    }
+  },
+});
 
 app.get("/api/get/:tableName", async (req, res) => {
   const { tableName } = req.params;
@@ -152,13 +173,242 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend API fut a http://localhost:${PORT}`);
+app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
+  const { felhasznalo_id, album_id, cim, leiras, helyszin_varos_id } = req.body;
+
+  const kepPath = req.file?.path;
+  if (!kepPath) {
+    return res.status(400).json({ error: "Kép fájl hiányzik" });
+  }
+
+  const kepBuffer = fs.readFileSync(kepPath);
+
+  let conn;
+  try {
+    conn = await connectDB();
+    await conn.execute(
+      `INSERT INTO kepek 
+        (felhasznalo_id, album_id, cim, leiras, feltoltes_datum, helyszin_varos_id, kep) 
+       VALUES 
+        (:felhasznalo_id, :album_id, :cim, :leiras, SYSDATE, :helyszin_varos_id, :kep)`,
+      {
+        felhasznalo_id,
+        album_id,
+        cim,
+        leiras,
+        helyszin_varos_id,
+        kep: kepBuffer,
+      },
+      { autoCommit: true }
+    );
+
+    res.status(200).json({ message: "✅ Kép sikeresen feltöltve" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "❌ Hiba a kép feltöltésekor" });
+  } finally {
+    fs.unlinkSync(kepPath);
+    if (conn) await conn.close();
+  }
 });
 
+app.get("/api/get/kep/:id", async (req, res) => {
+  const kepId = req.params.id;
 
+  let conn;
+  try {
+    conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT KEP, CIM FROM kepek WHERE KEP_ID = :id`,
+      [kepId],
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+        fetchInfo: {
+          KEP: { type: oracledb.BUFFER },
+        },
+      }
+    );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Nincs ilyen kép" });
+    }
 
+    const { KEP, CIM } = result.rows[0];
+
+    res.set("Content-Type", "image/jpeg");
+    res.set("Content-Disposition", `inline; filename="${CIM || "kep"}.jpg"`);
+    res.send(KEP);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "❌ Hiba a kép lekérésekor" });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+app.delete("/api/delete/kep/:id", async (req, res) => {
+  const kepId = req.params.id;
+
+  let conn;
+  try {
+    conn = await connectDB();
+
+    const result = await conn.execute(
+      `DELETE FROM kepek WHERE kep_id = :id`,
+      [kepId],
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: "Nincs ilyen kép azonosítóval" });
+    }
+
+    res.status(200).json({ message: "✅ Kép sikeresen törölve" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Hiba a törlés során" });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+app.put("/api/update/kep/:id", upload.single("kep"), async (req, res) => {
+  const kepId = req.params.id;
+  const {
+    felhasznalo_id,
+    album_id,
+    cim,
+    leiras,
+    feltoltes_datum,
+    helyszin_varos_id,
+  } = req.body;
+
+  let kepBuffer = null;
+  if (req.file) {
+    kepBuffer = fs.readFileSync(req.file.path);
+  }
+
+  let conn;
+  try {
+    conn = await connectDB();
+
+    const result = await conn.execute(
+      `UPDATE kepek SET 
+         felhasznalo_id = :felhasznalo_id,
+         album_id = :album_id,
+         cim = :cim,
+         leiras = :leiras,
+         feltoltes_datum = TO_DATE(:feltoltes_datum, 'YYYY-MM-DD'),
+         helyszin_varos_id = :helyszin_varos_id
+         ${kepBuffer ? ", kep = :kep" : ""}
+       WHERE kep_id = :kep_id`,
+      {
+        felhasznalo_id,
+        album_id,
+        cim,
+        leiras,
+        feltoltes_datum,
+        helyszin_varos_id,
+        ...(kepBuffer ? { kep: kepBuffer } : {}),
+        kep_id: kepId,
+      },
+      { autoCommit: true }
+    );
+
+    if (req.file) fs.unlinkSync(req.file.path);
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: "❌ Nincs ilyen kép azonosítóval" });
+    }
+
+    res.json({ message: "✅ Kép sikeresen frissítve" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "❌ Hiba a frissítés során" });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+app.patch(
+  "/api/updatePatch/kep/:id",
+  upload.single("kep"),
+  async (req, res) => {
+    const kepId = req.params.id;
+    const fields = [];
+    const values = { kep_id: kepId };
+
+    if (req.body.felhasznalo_id) {
+      fields.push("felhasznalo_id = :felhasznalo_id");
+      values.felhasznalo_id = req.body.felhasznalo_id;
+    }
+    if (req.body.album_id) {
+      fields.push("album_id = :album_id");
+      values.album_id = req.body.album_id;
+    }
+    if (req.body.cim) {
+      fields.push("cim = :cim");
+      values.cim = req.body.cim;
+    }
+    if (req.body.leiras) {
+      fields.push("leiras = :leiras");
+      values.leiras = req.body.leiras;
+    }
+    if (req.body.feltoltes_datum) {
+      fields.push("feltoltes_datum = TO_DATE(:feltoltes_datum, 'YYYY-MM-DD')");
+      values.feltoltes_datum = req.body.feltoltes_datum;
+    }
+    if (req.body.helyszin_varos_id) {
+      fields.push("helyszin_varos_id = :helyszin_varos_id");
+      values.helyszin_varos_id = req.body.helyszin_varos_id;
+    }
+
+    if (req.file) {
+      const kepBuffer = fs.readFileSync(req.file.path);
+      fields.push("kep = :kep");
+      values.kep = kepBuffer;
+      fs.unlinkSync(req.file.path);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "❌ Nincs frissítendő mező" });
+    }
+
+    const sql = `UPDATE kepek SET ${fields.join(", ")} WHERE kep_id = :kep_id`;
+
+    let conn;
+    try {
+      conn = await connectDB();
+      const result = await conn.execute(sql, values, { autoCommit: true });
+
+      if (result.rowsAffected === 0) {
+        return res
+          .status(404)
+          .json({ error: "❌ Nincs ilyen kép azonosítóval" });
+      }
+
+      res.json({ message: "✅ Kép sikeresen frissítve" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "❌ Hiba a frissítés során" });
+    } finally {
+      if (conn) await conn.close();
+    }
+  }
+);
+
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: `❌ Multer hiba: ${err.message}` });
+  } else if (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  next();
+});
+
+app.listen(4000, () => {
+  console.log("✅ API fut: http://localhost:4000");
+});
 
 // Login api fetch in code:
 /*
