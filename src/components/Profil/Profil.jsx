@@ -1,20 +1,26 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, Component } from "react";
 import "./Profil.css";
 import Sidebar from "../Sidebar/Sidebar";
 import { Link } from "react-router";
 
+//TODO: needs more work, renavigate when no userdata
 const Profil = () => {
-  const [uname, setUname] = useState("kovacsjanos69");
-  const [email, setEmail] = useState("default@gmail.com");
-  const [city, setCity] = useState("Budapest");
-  const [regdate, setRegDate] = useState("1999.01.01.");
+  const user = JSON.parse(localStorage.getItem("userData"));
 
-  const myfuntion = () => {
-    setUname("username");
-    setEmail("setter@set.hu");
-    setCity("City");
-    setRegDate("2023.10.01.");
-  };
+  const [uname, setUname] = useState(user.nev);
+  const [email, setEmail] = useState(user.email);
+  const [city, setCity] = useState(user.cityId);
+  const [regdate, setRegDate] = useState(user.reg_datum);
+
+  function formatDateToYMD(dateStr) {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // hónap: 0-indexelt
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   return (
     <div className="d-flex vh-100 custom-bg">
       <Sidebar />
@@ -22,8 +28,8 @@ const Profil = () => {
         <img src="./anonym-picture.png" alt="anonym-picture.png" />
         <br />
         <label
-          for="real-file-input"
-          class="btn btn-secondary btn-sm custom-file-upload mb-4 btn-sm rounded-pill px-4"
+          htmlFor="real-file-input"
+          className="btn btn-secondary btn-sm custom-file-upload mb-4 btn-sm rounded-pill px-4"
         >
           Új profilkép feltöltése
         </label>
@@ -47,7 +53,7 @@ const Profil = () => {
         </p>
         <p>
           <b>Regisztráció dátuma: </b>
-          {regdate} <br />
+          {formatDateToYMD(regdate)} <br />
         </p>
 
         <button className="btn btn-danger mt-4">Profil törlése</button>

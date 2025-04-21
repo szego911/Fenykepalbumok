@@ -1,109 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./TileList.css";
 import Tile from "../Tile/Tile";
-
-import { useState, useEffect } from "react";
-import "./TileList.css";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
 
 function TileList() {
-  const [tiles, setTiles] = useState([
-    {
-      id: 1,
-      title: "Kép",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 2,
-      title: "Kép2",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 3,
-      title: "Kép3",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 4,
-      title: "Kép",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 5,
-      title: "Kép2",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 6,
-      title: "Kép3",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 7,
-      title: "Kép",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 8,
-      title: "Kép2",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-    {
-      id: 9,
-      title: "Kép3",
-      thumbnail: "Borito",
-      description: "Leiras",
-      createdBy: "Keszitette",
-    },
-  ]);
+  const [tiles, setTiles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const requestOptions = {
+      method: "GET",
+      redirect: "follow",
+    };
 
-  /*useEffect(() => {
-    fetch(window._env_.BACKEND_URL + "/presentation/list")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
+    fetch("http://localhost:4000/api/allImages", requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        setTiles(result);
+        setIsLoading(false);
       })
-      .then((data) => {
-        if (data.success) {
-          setTiles(data.presentations);
-        } else {
-          throw new Error("Server returned unsuccessful response");
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching tiles:", error);
-        setTiles([]);
-      });
-  }, []);*/
+      .catch((error) => console.error(error));
+  }, []);
+
   return (
     <div className="tile-list">
-      {tiles.map((tile) => (
-        <Tile
-          id={tile.id}
-          title={tile.title}
-          thumbnail={tile.thumbnail}
-          description={tile.description}
-          createdBy={tile.createdBy}
-        />
-      ))}
+      {!isLoading ? (
+        tiles.map((tile) => (
+          <Tile
+            kep_id={tile.KEP_ID}
+            felhasznalo_id={tile.FELHASZNALO_ID}
+            album_id={tile.ALBUM_ID}
+            cim={tile.CIM}
+            leiras={tile.LEIRAS}
+            feltoltes_datum={tile.FELTOLTES_DATUM}
+            helyszin_varos_id={tile.HELYSZIN_VAROS_ID}
+            kep={tile.KEP}
+          />
+        ))
+      ) : (
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      )}
     </div>
   );
 }

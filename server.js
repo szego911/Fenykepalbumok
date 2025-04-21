@@ -25,7 +25,7 @@ const connectDB = async () => {
 
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 5 * 1024 * 1024 }, // max 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png/;
     const extname = filetypes.test(
@@ -36,16 +36,27 @@ const upload = multer({
     if (extname && mimetype) {
       return cb(null, true);
     } else {
-      cb(new Error("❌ Csak JPG vagy PNG fájl engedélyezett"));
+      cb(new Error("Csak JPG vagy PNG fájl engedélyezett"));
     }
   },
 });
+
+function lobToBase64(lob) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    lob.setEncoding("base64");
+
+    lob.on("data", (chunk) => chunks.push(chunk));
+    lob.on("end", () => resolve(chunks.join("")));
+    lob.on("error", reject);
+  });
+}
 
 app.get("/api/get/:tableName", async (req, res) => {
   const { tableName } = req.params;
 
   if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
-    return res.status(400).send("❌ Érvénytelen tábla név");
+    return res.status(400).send("Érvénytelen tábla név");
   }
 
   try {
@@ -57,9 +68,13 @@ app.get("/api/get/:tableName", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send(`❌ Hiba a ${tableName} tábla lekérdezésekor`);
+    res
+      .status(500)
+      .send(`Hiba a ${tableName} tábla lekérdezésekor, hiba: ${err}`);
   }
 });
+
+//FELHASZNALOK
 
 app.post("/api/register", async (req, res) => {
   const { userName, email, password, cityId } = req.body;
@@ -115,7 +130,10 @@ app.post("/api/register", async (req, res) => {
       { autoCommit: true }
     );
     await conn.close();
-    res.status(201).send("Sikeres regisztráció");
+    res.status(201).json({
+      message: "✅ Sikeres bejelentkezés",
+      success: true,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Hiba: Hiba történt a regisztráció során");
@@ -159,6 +177,7 @@ app.post("/api/login", async (req, res) => {
 
     res.status(200).json({
       message: "✅ Sikeres bejelentkezés",
+      success: true,
       user: {
         id: user.FELHASZNALO_ID,
         nev: user.FELHASZNALONEV,
@@ -170,6 +189,42 @@ app.post("/api/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Hiba: Hiba történt a bejelentkezés során");
+  }
+});
+
+//KEPEK
+
+app.get("/api/allImages", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(`SELECT * FROM kepek`, [], {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+
+    const rows = [];
+
+    for (const row of result.rows) {
+      const newRow = { ...row };
+
+      // Végigmegyünk az összes mezőn, és ha BLOB, base64-re konvertáljuk
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          // Ez egy BLOB (Lob), base64-re alakítjuk
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a képek lekérdezésekor:", err);
+    res
+      .status(500)
+      .json({ message: "Hiba a képek lekérdezésekor", error: err });
   }
 });
 
@@ -240,7 +295,7 @@ app.get("/api/get/kep/:id", async (req, res) => {
     res.send(KEP);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "❌ Hiba a kép lekérésekor" });
+    res.status(500).json({ error: "Hiba a kép lekérésekor" });
   } finally {
     if (conn) await conn.close();
   }
@@ -263,10 +318,10 @@ app.delete("/api/delete/kep/:id", async (req, res) => {
       return res.status(404).json({ error: "Nincs ilyen kép azonosítóval" });
     }
 
-    res.status(200).json({ message: "✅ Kép sikeresen törölve" });
+    res.status(200).json({ message: "Kép sikeresen törölve", success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Hiba a törlés során" });
+    res.status(500).json({ error: "Hiba a törlés során", err: err });
   } finally {
     if (conn) await conn.close();
   }
@@ -321,7 +376,7 @@ app.put("/api/update/kep/:id", upload.single("kep"), async (req, res) => {
       return res.status(404).json({ error: "❌ Nincs ilyen kép azonosítóval" });
     }
 
-    res.json({ message: "✅ Kép sikeresen frissítve" });
+    res.json({ message: "✅ Kép sikeresen frissítve", success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "❌ Hiba a frissítés során" });
@@ -387,7 +442,7 @@ app.patch(
           .json({ error: "❌ Nincs ilyen kép azonosítóval" });
       }
 
-      res.json({ message: "✅ Kép sikeresen frissítve" });
+      res.json({ message: "✅ Kép sikeresen frissítve", success: true });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "❌ Hiba a frissítés során" });
@@ -396,6 +451,31 @@ app.patch(
     }
   }
 );
+
+//ALBUMOK
+
+app.post("/api/create/album", async (req, res) => {
+  const { nev, leiras } = req.body;
+  const felhasznalo_id = "1";
+  try {
+    const conn = await connectDB();
+
+    await conn.execute(
+      `INSERT INTO albumok (felhasznalo_id, nev, leiras, letrehozas_datum)
+       VALUES (:felhasznalo_id, :nev, :leiras, SYSDATE)`,
+      { felhasznalo_id, nev, leiras },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+    res
+      .status(201)
+      .json({ message: "Album sikeresen létrehozva", success: true });
+  } catch (err) {
+    console.error("Hiba album létrehozásakor:", err);
+    res.status(500).json({ message: "Hiba album létrehozásakor", error: err });
+  }
+});
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
