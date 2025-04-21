@@ -74,39 +74,7 @@ app.get("/api/get/:tableName", async (req, res) => {
   }
 });
 
-app.get("/api/allImages", async (req, res) => {
-  try {
-    const conn = await connectDB();
-    const result = await conn.execute(`SELECT * FROM kepek`, [], {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
-
-    const rows = [];
-
-    for (const row of result.rows) {
-      const newRow = { ...row };
-
-      // Végigmegyünk az összes mezőn, és ha BLOB, base64-re konvertáljuk
-      for (const key of Object.keys(newRow)) {
-        const val = newRow[key];
-        if (val && typeof val === "object" && typeof val.on === "function") {
-          // Ez egy BLOB (Lob), base64-re alakítjuk
-          newRow[key] = await lobToBase64(val);
-        }
-      }
-
-      rows.push(newRow);
-    }
-
-    await conn.close();
-    res.json(rows);
-  } catch (err) {
-    console.error("Hiba a képek lekérdezésekor:", err);
-    res
-      .status(500)
-      .json({ message: "Hiba a képek lekérdezésekor", error: err });
-  }
-});
+//FELHASZNALOK
 
 app.post("/api/register", async (req, res) => {
   const { userName, email, password, cityId } = req.body;
@@ -221,6 +189,42 @@ app.post("/api/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Hiba: Hiba történt a bejelentkezés során");
+  }
+});
+
+//KEPEK
+
+app.get("/api/allImages", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(`SELECT * FROM kepek`, [], {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+
+    const rows = [];
+
+    for (const row of result.rows) {
+      const newRow = { ...row };
+
+      // Végigmegyünk az összes mezőn, és ha BLOB, base64-re konvertáljuk
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          // Ez egy BLOB (Lob), base64-re alakítjuk
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a képek lekérdezésekor:", err);
+    res
+      .status(500)
+      .json({ message: "Hiba a képek lekérdezésekor", error: err });
   }
 });
 
@@ -447,6 +451,31 @@ app.patch(
     }
   }
 );
+
+//ALBUMOK
+
+app.post("/api/create/album", async (req, res) => {
+  const { nev, leiras } = req.body;
+  const felhasznalo_id = "1";
+  try {
+    const conn = await connectDB();
+
+    await conn.execute(
+      `INSERT INTO albumok (felhasznalo_id, nev, leiras, letrehozas_datum)
+       VALUES (:felhasznalo_id, :nev, :leiras, SYSDATE)`,
+      { felhasznalo_id, nev, leiras },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+    res
+      .status(201)
+      .json({ message: "Album sikeresen létrehozva", success: true });
+  } catch (err) {
+    console.error("Hiba album létrehozásakor:", err);
+    res.status(500).json({ message: "Hiba album létrehozásakor", error: err });
+  }
+});
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

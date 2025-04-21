@@ -1,9 +1,46 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import "./Register.css";
 import { Link } from "react-router";
 import Sidebar from "../Sidebar/Sidebar";
 
-const Presenter = () => {
+//TODO: cityID fix
+const Register = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userName, setUserName] = useState("");
+  // eslint-disable-next-line no-unused-vars
+  const [cityId, setCityId] = useState("2");
+  const register = () => {
+    const raw = JSON.stringify({
+      userName,
+      email,
+      password,
+      cityId,
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:4000/api/register", requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Sikeres Regisztráció! Most jelentkezz be!");
+          navigate("/login");
+        } else {
+          throw new Error(
+            "Server returned unsuccessful response!" + data.error
+          );
+        }
+      })
+      .catch((error) => console.error("Error regist user: ", error));
+  };
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
       <Sidebar />
@@ -19,6 +56,7 @@ const Presenter = () => {
                 id="username"
                 aria-describedby="emailHelp"
                 name="username"
+                onChange={(e) => setUserName(e.target.value)}
               />
             </div>
             <div className="form-group">
@@ -29,6 +67,7 @@ const Presenter = () => {
                 id="email"
                 aria-describedby="emailHelp"
                 name="email"
+                onChange={(e) => setEmail(e.target.value)}
               />
               <small id="emailHelp" className="form-text text-muted">
                 We'll never share your email with anyone else.
@@ -105,6 +144,7 @@ const Presenter = () => {
                 className="form-control"
                 id="password1"
                 name="password1"
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div className="form-group">
@@ -118,7 +158,7 @@ const Presenter = () => {
             </div>
           </form>
 
-          <button type="button" className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={register}>
             Regisztráció
           </button>
           <div className="d-flex justify-content-end">
@@ -132,4 +172,4 @@ const Presenter = () => {
   );
 };
 
-export default Presenter;
+export default Register;

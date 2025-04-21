@@ -27,9 +27,7 @@ const Home = () => {
   const handleOpenAlbumModal = () => setShowAlbumModal(true);
   const handleCloseAlbumModal = () => setShowAlbumModal(false);
 
-
   const handleImageUploadChange = (e) => {
-
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -46,7 +44,6 @@ const Home = () => {
     }));
   };
 
-
   const handleImageUploadSubmit = (e) => {
     e.preventDefault();
     uploadImage();
@@ -56,7 +53,7 @@ const Home = () => {
   // --- Album űrlap beküldése ---
   const handleAlbumSubmit = (e) => {
     e.preventDefault();
-    console.log("Új album adatai:", albumData);
+    uploadAlbum();
     handleCloseAlbumModal(); // Modal bezárása feltöltés után
   };
 
@@ -77,6 +74,25 @@ const Home = () => {
     };
 
     await fetch("http://localhost:4000/api/upload/image", requestOptions)
+      .then((response) => response.text())
+      .then((result) => console.log(result))
+      .catch((error) => console.error(error));
+  };
+
+  const uploadAlbum = async () => {
+    const raw = JSON.stringify({
+      nev: albumData.name,
+      leiras: albumData.description,
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:4000/api/create/album", requestOptions)
       .then((response) => response.text())
       .then((result) => console.log(result))
       .catch((error) => console.error(error));
