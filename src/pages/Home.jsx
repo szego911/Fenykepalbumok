@@ -105,7 +105,7 @@ const Home = () => {
           </div>
           <TileList />
 
-          {/* Modal */}
+          {/* Képfeltöltés Modal */}
           {showModal && (
             <div className="modal-backdrop">
               <div className="modal-content-small">
@@ -154,7 +154,7 @@ const Home = () => {
                       <option value="család">Család</option>
                       <option value="nyaralás">Nyaralás</option>
                       <option value="művészet">Művészet</option>
-                      {/* dinamikusan is jöhetne backendről */}
+                      {/* Itt kérjük majd le az AB-ból a friss adatokat */}
                     </select>
                   </div>
 
@@ -204,6 +204,7 @@ const Home = () => {
             </div>
           )}
 
+          {/* Album létrehozás Modal */}
           {showAlbumModal && (
             <div className="modal-backdrop">
               <div className="modal-content-small">
