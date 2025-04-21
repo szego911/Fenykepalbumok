@@ -9,7 +9,8 @@
 ##### BACKEND CONNECTION:
 
 - Elsőnek a terminálban futtajuk  
-  `ssh -L 1521:orania2.inf.u-szeged.hu:1521 hxxxxxx@linux.inf.u-szeged.hu`
+  `ssh -L 1522:orania2.inf.u-szeged.hu:1521 h269466@linux.inf.u-szeged.hu`
+  'koktelHagyma675'
   Nektek megvan elvileg a hozzáférés a táblákhoz, így saját h-s azonosítóval is működnie kell, terminálban be kell írni a jelszót.
 - Egy új terminálban `npm run start`
 - Még egy új terminálban `npm run dev`, ha nem talál valami dependecyt `npm install`
