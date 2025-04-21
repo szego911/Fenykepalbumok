@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import "./css/Main.css";
 import Sidebar from "../components/Sidebar/Sidebar";
 import TileList from "../components/TileList/TileList";
-import WaitlistList from "../components/WaitlistList/WaitlistList";
 
 const Home = () => {
   // --- Kép feltöltés modal állapotai ---
@@ -28,8 +27,9 @@ const Home = () => {
   const handleOpenAlbumModal = () => setShowAlbumModal(true);
   const handleCloseAlbumModal = () => setShowAlbumModal(false);
 
-  // --- Form kezelők ---
-  const handleChange = (e) => {
+
+  const handleImageUploadChange = (e) => {
+
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -46,12 +46,11 @@ const Home = () => {
     }));
   };
 
-  // --- Képfeltöltés űrlap beküldése ---
-  const handleSubmit = (e) => {
+
+  const handleImageUploadSubmit = (e) => {
     e.preventDefault();
-    uploadImage(); // Kép küldése backendre
-    console.log("Feltöltendő adat:", formData);
-    handleCloseModal(); // Modal bezárása feltöltés után
+    uploadImage();
+    handleCloseModal();
   };
 
   // --- Album űrlap beküldése ---
@@ -110,7 +109,7 @@ const Home = () => {
             <div className="modal-backdrop">
               <div className="modal-content-small">
                 <h2 className="poppins">Kép feltöltése</h2>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleImageUploadSubmit}>
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Kép címe:{""}
@@ -119,7 +118,7 @@ const Home = () => {
                       type="text"
                       name="title"
                       value={formData.title}
-                      onChange={handleChange}
+                      onChange={handleImageUploadChange}
                       className="form-control"
                       required
                     />
@@ -133,7 +132,7 @@ const Home = () => {
                       type="text"
                       name="location"
                       value={formData.location}
-                      onChange={handleChange}
+                      onChange={handleImageUploadChange}
                       className="form-control"
                       required
                     />
@@ -146,7 +145,7 @@ const Home = () => {
                     <select
                       name="album"
                       value={formData.album}
-                      onChange={handleChange}
+                      onChange={handleImageUploadChange}
                       className="form-control"
                       required
                     >
@@ -166,7 +165,7 @@ const Home = () => {
                       type="file"
                       name="file"
                       accept="image/*"
-                      onChange={handleChange}
+                      onChange={handleImageUploadChange}
                       className="form-control"
                       required
                     />
@@ -179,7 +178,7 @@ const Home = () => {
                     <textarea
                       name="description"
                       value={formData.description}
-                      onChange={handleChange}
+                      onChange={handleImageUploadChange}
                       className="form-control"
                       rows={3}
                       required

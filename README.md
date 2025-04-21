@@ -10,7 +10,7 @@
 
 - Elsőnek a terminálban futtajuk  
   `ssh -L 1522:orania2.inf.u-szeged.hu:1521 h269466@linux.inf.u-szeged.hu`
-  'koktelHagyma675'
+  `koktelHagyma675`
   Nektek megvan elvileg a hozzáférés a táblákhoz, így saját h-s azonosítóval is működnie kell, terminálban be kell írni a jelszót.
 - Egy új terminálban `npm run start`
 - Még egy új terminálban `npm run dev`, ha nem talál valami dependecyt `npm install`
@@ -24,6 +24,10 @@ Jelenlegi apik tesztelve és működnek:
 - GET `http://localhost:4000/api/get/:tableName` ez az api visszaadja a json formátumban a `tableName` alapján az adott tábla összes adatát. Pl: `/api/get/felhasznalok` az összes felhasználó adatát visszaadja, `/api/get/varosok` az összes város adatát visszaadja.
 - POST `http://localhost:4000/api/register` ez bodyban várja az adatokat: `userName`,`email`,`password`,`cityId`. `Lásd server.js` vége.
 - POST `http://localhost:4000/api/login` ez bodyban várja az adatokat: `email`,`password`. `Lásd server.js` vége.
+- GET `http://localhost:4000/api/allImages` ez az api visszaadja a json formátumban a kepek tábla adatait.
+- GET `http://localhost:4000/api/get/kep/:id` adott id alapján visszaadja a képet: 
+- PATCH `http://localhost:4000/api/updatePatch/kep/:id` módosítja az adott idjú képet, nem kell minden attrubútum.
+- DELETE `http://localhost:4000/api/delete/kep/6` id alapján törli a képet
 
 ---
 
