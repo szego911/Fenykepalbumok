@@ -5,6 +5,7 @@ import TileList from "../components/TileList/TileList";
 import WaitlistList from "../components/WaitlistList/WaitlistList";
 
 const Home = () => {
+  // --- Kép feltöltés modal állapotai ---
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -14,25 +15,53 @@ const Home = () => {
     location: "",
   });
 
+  // --- Album létrehozás modal állapotai ---
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
+  const [albumData, setAlbumData] = useState({
+    name: "",
+    description: "",
+  });
+
+  // --- Modalok nyitása/zárása ---
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
+  const handleOpenAlbumModal = () => setShowAlbumModal(true);
+  const handleCloseAlbumModal = () => setShowAlbumModal(false);
 
+  // --- Form kezelők ---
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value,
+      [name]: files ? files[0] : value, // fájl esetén a fájlobjektumot menti, egyébként a szöveges értéket
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    uploadImage();
-    console.log("Feltöltendő adat:", formData);
-    // TODO: ide jöhet a backend hívás (pl. fetch vagy axios)
-    handleCloseModal();
+  // --- Album űrlap mezőinek kezelése ---
+  const handleAlbumChange = (e) => {
+    const { name, value } = e.target;
+    setAlbumData((prev) => ({
+      ...prev,
+      [name]: value, // albumnév és leírás frissítése
+    }));
   };
 
+  // --- Képfeltöltés űrlap beküldése ---
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    uploadImage(); // Kép küldése backendre
+    console.log("Feltöltendő adat:", formData);
+    handleCloseModal(); // Modal bezárása feltöltés után
+  };
+
+  // --- Album űrlap beküldése ---
+  const handleAlbumSubmit = (e) => {
+    e.preventDefault();
+    console.log("Új album adatai:", albumData);
+    handleCloseAlbumModal(); // Modal bezárása feltöltés után
+  };
+
+  // --- Kép feltöltése a backendre (POST kérés FormData-val) ---
   const uploadImage = async () => {
     const formdata = new FormData();
     formdata.append("felhasznalo_id", "1");
@@ -59,12 +88,18 @@ const Home = () => {
       <Sidebar />
       <div className="content">
         <div className="home">
-          <div className="title d-flex justify-content-between align-items-center mb-4">
+          <div className="title d-flex justify-content-between align-items-center m-4">
             <button
               onClick={handleOpenModal}
-              className="btn btn-secondary btn-sm"
+              className="btn btn-success btn-sm mr-4"
             >
               + Kép feltöltése
+            </button>
+            <button
+              onClick={handleOpenAlbumModal}
+              className="btn btn-info btn-sm"
+            >
+              + Album létrehozása
             </button>
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
@@ -153,13 +188,64 @@ const Home = () => {
                   </div>
 
                   <div className="d-flex justify-content-between mt-3">
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className="btn btn-success">
                       Feltöltés
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={handleCloseModal}
+                    >
+                      Mégsem
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {showAlbumModal && (
+            <div className="modal-backdrop">
+              <div className="modal-content-small">
+                <h2 className="poppins">Új album létrehozása</h2>
+                <form onSubmit={handleAlbumSubmit}>
+                  <div className="form-group">
+                    <label className="form-label text-start w-100 fs-5 text">
+                      Album neve
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={albumData.name}
+                      onChange={handleAlbumChange}
+                      className="form-control"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label text-start w-100 fs-5 text">
+                      Rövid leírás
+                    </label>
+                    <textarea
+                      name="description"
+                      value={albumData.description}
+                      onChange={handleAlbumChange}
+                      className="form-control"
+                      rows={3}
+                      maxLength={150}
+                      required
+                    />
+                  </div>
+
+                  <div className="d-flex justify-content-between mt-3">
+                    <button type="submit" className="btn btn-info">
+                      Létrehozás
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleCloseAlbumModal}
                     >
                       Mégsem
                     </button>
