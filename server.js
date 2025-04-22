@@ -486,6 +486,215 @@ app.use((err, req, res, next) => {
   next();
 });
 
+//ÉRTÉKELÉSEK
+
+//HOZZÁSZÓLÁSOK
+app.post("/api/create/hozzaszolas", async (req, res) => {
+  const { kep_id, felhasznalo_id, tartalom } = req.body;
+
+  try {
+    const conn = await connectDB();
+
+    await conn.execute(
+      `INSERT INTO hozzaszolasok (kep_id, felhasznalo_id, tartalom, datum)
+       VALUES (:kep_id, :felhasznalo_id, :tartalom, SYSDATE)`,
+      { kep_id, felhasznalo_id, tartalom },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+    res
+      .status(201)
+      .json({ message: "Hozzászólás sikeresen létrehozva", success: true });
+  } catch (err) {
+    console.error("Hiba hozzászólás létrehozásakor:", err);
+    res
+      .status(500)
+      .json({ message: "Hiba hozzászólás létrehozásakor", error: err });
+  }
+});
+
+app.delete("/api/delete/hozzaszolas/:id", async (req, res) => {
+  const hozzaszolas_id = req.params.id;
+
+  try {
+    const conn = await connectDB();
+
+    const result = await conn.execute(
+      `DELETE FROM hozzaszolasok WHERE hozzaszolas_id = :hozzaszolas_id`,
+      { hozzaszolas_id },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+
+    if (result.rowsAffected === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen hozzászólás", success: false });
+    }
+
+    res.json({ message: "Hozzászólás sikeresen törölve", success: true });
+  } catch (err) {
+    console.error("Hiba hozzászólás törlésekor:", err);
+    res
+      .status(500)
+      .json({ message: "Hiba hozzászólás törlésekor", error: err });
+  }
+});
+
+app.patch("/api/update/hozzaszolas/:id", async (req, res) => {
+  const hozzaszolas_id = req.params.id;
+  const fields = req.body;
+
+  if (Object.keys(fields).length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Nincs frissítendő adat", success: false });
+  }
+
+  const allowedFields = ["kep_id", "felhasznalo_id", "tartalom"];
+  const updates = [];
+  const bindParams = { hozzaszolas_id };
+
+  for (const key of allowedFields) {
+    if (fields[key] !== undefined) {
+      updates.push(`${key} = :${key}`);
+      bindParams[key] = fields[key];
+    }
+  }
+
+  if (updates.length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Nincs érvényes mező a frissítéshez", success: false });
+  }
+
+  const sql = `UPDATE hozzaszolasok SET ${updates.join(
+    ", "
+  )} WHERE hozzaszolas_id = :hozzaszolas_id`;
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(sql, bindParams, { autoCommit: true });
+    await conn.close();
+
+    if (result.rowsAffected === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen hozzászólás", success: false });
+    }
+
+    res.json({ message: "Hozzászólás sikeresen frissítve", success: true });
+  } catch (err) {
+    console.error("Hiba hozzászólás frissítésekor:", err);
+    res
+      .status(500)
+      .json({ message: "Hiba hozzászólás frissítésekor", error: err });
+  }
+});
+
+//VÁROSOK
+
+app.post("/api/create/varos", async (req, res) => {
+  const { nev, megye, iranyitoszam } = req.body;
+
+  try {
+    const conn = await connectDB();
+
+    await conn.execute(
+      `INSERT INTO varosok (nev, megye, iranyitoszam)
+       VALUES (:nev, :megye, :iranyitoszam)`,
+      { nev, megye, iranyitoszam },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+    res
+      .status(201)
+      .json({ message: "Város sikeresen hozzáadva", success: true });
+  } catch (err) {
+    console.error("Hiba város hozzáadásakor:", err);
+    res.status(500).json({ message: "Hiba város hozzáadásakor", error: err });
+  }
+});
+
+app.delete("/api/delete/varos/:id", async (req, res) => {
+  const varos_id = req.params.id;
+
+  try {
+    const conn = await connectDB();
+
+    const result = await conn.execute(
+      `DELETE FROM varosok WHERE varos_id = :varos_id`,
+      { varos_id },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+
+    if (result.rowsAffected === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen város", success: false });
+    }
+
+    res.json({ message: "Város sikeresen törölve", success: true });
+  } catch (err) {
+    console.error("Hiba város törlésekor:", err);
+    res.status(500).json({ message: "Hiba város törlésekor", error: err });
+  }
+});
+
+app.patch("/api/update/varos/:id", async (req, res) => {
+  const varos_id = req.params.id;
+  const fields = req.body;
+
+  if (Object.keys(fields).length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Nincs frissítendő adat", success: false });
+  }
+
+  const allowedFields = ["nev", "megye", "iranyitoszam"];
+  const updates = [];
+  const bindParams = { varos_id };
+
+  for (const key of allowedFields) {
+    if (fields[key] !== undefined) {
+      updates.push(`${key} = :${key}`);
+      bindParams[key] = fields[key];
+    }
+  }
+
+  if (updates.length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Nincs érvényes mező a frissítéshez", success: false });
+  }
+
+  const sql = `UPDATE varosok SET ${updates.join(
+    ", "
+  )} WHERE varos_id = :varos_id`;
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(sql, bindParams, { autoCommit: true });
+    await conn.close();
+
+    if (result.rowsAffected === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen város", success: false });
+    }
+
+    res.json({ message: "Város sikeresen frissítve", success: true });
+  } catch (err) {
+    console.error("Hiba város frissítésekor:", err);
+    res.status(500).json({ message: "Hiba város frissítésekor", error: err });
+  }
+});
+
 app.listen(4000, () => {
   console.log("✅ API fut: http://localhost:4000");
 });

@@ -5,6 +5,7 @@ import Login from "./components/Login/Login";
 import Register from "./components/Register/Register";
 import Profil from "./components/Profil/Profil";
 import BestImages from "./components/BestImages/BestImages";
+import Varosok from "./components/Tables/Varosok/Varosok";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/categories" element={<BestImages />} />
           <Route path="/image/:id" element={<BestImages />} />
           <Route path="/profil" element={<Profil />} />
+          <Route path="/varosok" element={<Varosok />} />
 
           <Route path="*" element={<Home />} />
         </Routes>
