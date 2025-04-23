@@ -7,6 +7,7 @@ const Varosok = () => {
   const [nev, setNev] = useState("");
   const [megye, setMegye] = useState("");
   const [iranyitoszam, setIranyitoszam] = useState("");
+  const [createError, setCreateError] = useState("");
 
   const [torlendoId, setTorlendoId] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +16,7 @@ const Varosok = () => {
   const [updateNev, setUpdateNev] = useState("");
   const [updateMegye, setUpdateMegye] = useState("");
   const [updateIranyitoszam, setUpdateIranyitoszam] = useState("");
+  const [updateError, setUpdateError] = useState("");
 
   const { isLoggedIn } = useAuth();
 
@@ -22,59 +24,68 @@ const Varosok = () => {
     return (
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
-        <div class="profil shadow">
+
+
+        <div className="profil shadow">
           Ez a városok kezelője, kérlek jelentkezz{" "}
           <a href="/login">
             <span className="text-primary underline-on-hover">itt</span>
           </a>
           , hogy használni tudd!
+
         </div>
       </div>
     );
   }
 
   const createVaros = () => {
-    const raw = JSON.stringify({
-      nev,
-      megye,
-      iranyitoszam,
-    });
+    setCreateError("");
 
-    const requestOptions = {
+    if (!nev || !megye || !iranyitoszam) {
+      setCreateError("Kérlek tölts ki minden mezőt a létrehozáshoz.");
+      return;
+    }
+
+    const raw = JSON.stringify({ nev, megye, iranyitoszam });
+
+    fetch("http://localhost:4000/api/create/varos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: raw,
-      redirect: "follow",
-    };
-
-    fetch("http://localhost:4000/api/create/varos", requestOptions)
+    })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
           alert("Város hozzáadva");
+          setNev("");
+          setMegye("");
+          setIranyitoszam("");
         } else {
-          throw new Error(
-            "Server returned unsuccessful response!" + data.error
-          );
+          throw new Error(data.error || "Hiba történt!");
         }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => setCreateError(error.message));
   };
 
   const updateVaros = () => {
+    setUpdateError("");
+
+    if (!updateId || !updateNev || !updateMegye || !updateIranyitoszam) {
+      setUpdateError("Kérlek tölts ki minden mezőt a módosításhoz.");
+      return;
+    }
+
     const raw = JSON.stringify({
       nev: updateNev,
       megye: updateMegye,
       iranyitoszam: updateIranyitoszam,
     });
 
-    const requestOptions = {
+    fetch(`http://localhost:4000/api/update/varos/${updateId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: raw,
-    };
-
-    fetch(`http://localhost:4000/api/update/varos/${updateId}`, requestOptions)
+    })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
@@ -84,10 +95,10 @@ const Varosok = () => {
           setUpdateMegye("");
           setUpdateIranyitoszam("");
         } else {
-          alert(data.message || "Hiba történt");
+          setUpdateError(data.message || "Hiba történt a módosítás során.");
         }
       })
-      .catch((error) => console.error("Hiba módosításkor:", error));
+      .catch((error) => setUpdateError("Hiba módosításkor: " + error.message));
   };
 
   const deleteVaros = () => {
@@ -104,7 +115,7 @@ const Varosok = () => {
         if (data.success) {
           alert("A város sikeresen törölve.");
         } else {
-          alert("A megadott id-vel egyetlen város sem rendelkezik.");
+          alert("A megadott ID-vel nem található város.");
         }
       })
       .catch((error) => console.error("Hiba történt: ", error));
@@ -119,32 +130,33 @@ const Varosok = () => {
       <div className="login">
         <div className="mt-20 login-container shadow">
           <h1 className="text-center poppins">Új város hozzáadása</h1>
+
+          {createError && (
+            <div className="alert alert-danger">{createError}</div>
+          )}
+
           <form>
             <div className="form-group">
-              <label htmlFor="username">Város neve</label>
+              <label>Város neve</label>
               <input
                 type="text"
                 className="form-control"
-                id="username"
-                aria-describedby="emailHelp"
-                name="username"
+                value={nev}
                 onChange={(e) => setNev(e.target.value)}
               />
             </div>
             <div className="row mb-3">
               <div className="col-md-7">
                 <div className="input-group input-group-sm">
-                  <label className="input-group-text" htmlFor="megyeSelect">
-                    Megye
-                  </label>
+                  <label className="input-group-text">Megye</label>
                   <select
                     className="form-select"
-                    id="county"
-                    aria-label="Megye kiválasztása"
-                    name="county"
+                    value={megye}
                     onChange={(e) => setMegye(e.target.value)}
                   >
-                    <option defaultValue disabled></option>
+                    <option value="" disabled>
+                      Válassz megyét
+                    </option>
                     <option value="bp">Budapest</option>
                     <option value="bk">Bács-Kiskun</option>
                     <option value="baz">Borsod-Abaúj-Zemplén</option>
@@ -170,16 +182,12 @@ const Varosok = () => {
               </div>
               <div className="col-md-5">
                 <div className="input-group input-group-sm">
-                  <span className="input-group-text" id="inputGroup-sizing-sm">
-                    Irányítószám
-                  </span>
+                  <span className="input-group-text">Irányítószám</span>
                   <input
                     type="text"
                     className="form-control"
-                    aria-label="Irányítószám"
-                    aria-describedby="inputGroup-sizing-sm"
                     maxLength="4"
-                    name="zip"
+                    value={iranyitoszam}
                     onChange={(e) => setIranyitoszam(e.target.value)}
                   />
                 </div>
@@ -187,26 +195,19 @@ const Varosok = () => {
             </div>
           </form>
 
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={createVaros}
-          >
+          <button className="btn btn-primary" onClick={createVaros}>
             Létrehoz
           </button>
 
-          <div className="d-flex justify-content-end">
+          <div className="d-flex justify-content-end mt-3">
             <button
-              type="button"
               className="btn btn-dark ms-2"
               data-bs-toggle="modal"
               data-bs-target="#updateModal"
             >
               Módosítás
             </button>
-
             <button
-              type="button"
               className="btn btn-danger ms-2"
               onClick={() => setShowModal(true)}
             >
@@ -215,21 +216,16 @@ const Varosok = () => {
           </div>
 
           {/* Módosítás Modal */}
-          <div
-            className="modal fade"
-            id="updateModal"
-            tabIndex="-1"
-            aria-labelledby="updateModalLabel"
-            aria-hidden="true"
-          >
+          <div className="modal fade" id="updateModal" tabIndex="-1">
             <div className="modal-dialog">
               <div className="modal-content rounded-4 shadow-lg">
                 <div className="modal-header justify-content-center border-0">
-                  <h2 className="text-center poppins" id="updateModalLabel">
-                    Város módosítása
-                  </h2>
+                  <h2 className="text-center poppins">Város módosítása</h2>
                 </div>
                 <div className="modal-body">
+                  {updateError && (
+                    <div className="alert alert-danger">{updateError}</div>
+                  )}
                   <input
                     type="text"
                     placeholder="ID"
@@ -249,7 +245,9 @@ const Varosok = () => {
                     value={updateMegye}
                     onChange={(e) => setUpdateMegye(e.target.value)}
                   >
-                    <option defaultValue disabled></option>
+                    <option value="" disabled>
+                      Válassz megyét
+                    </option>
                     <option value="bp">Budapest</option>
                     <option value="bk">Bács-Kiskun</option>
                     <option value="baz">Borsod-Abaúj-Zemplén</option>
@@ -276,23 +274,15 @@ const Varosok = () => {
                     placeholder="Új irányítószám"
                     className="form-control"
                     value={updateIranyitoszam}
-                    onChange={(e) => setUpdateIranyitoszam(e.target.value)}
                     maxLength="4"
+                    onChange={(e) => setUpdateIranyitoszam(e.target.value)}
                   />
                 </div>
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                  >
+                  <button className="btn btn-secondary" data-bs-dismiss="modal">
                     Mégsem
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-dark"
-                    onClick={updateVaros}
-                  >
+                  <button className="btn btn-dark" onClick={updateVaros}>
                     Módosítás
                   </button>
                 </div>
