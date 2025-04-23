@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
 import "../../../pages/css/Main.css";
-import { Link } from "react-router";
 import Sidebar from "../../Sidebar/Sidebar";
+import { useAuth } from "../../../hooks/useAuth";
 
 const Varosok = () => {
   const [nev, setNev] = useState("");
@@ -16,6 +15,20 @@ const Varosok = () => {
   const [updateNev, setUpdateNev] = useState("");
   const [updateMegye, setUpdateMegye] = useState("");
   const [updateIranyitoszam, setUpdateIranyitoszam] = useState("");
+
+  const { isLoggedIn } = useAuth();
+
+  if (!isLoggedIn) {
+    return (
+      <div className="d-flex vh-100 custom-bg">
+        <Sidebar />
+        <div class="profil shadow">
+          Ez a városok kezelője, kérlek jelentkezz <a href="/login">itt</a>,
+          hogy használni tudd!
+        </div>
+      </div>
+    );
+  }
 
   const createVaros = () => {
     const raw = JSON.stringify({

@@ -14,13 +14,19 @@ function TileList() {
       redirect: "follow",
     };
 
-    fetch("http://localhost:4000/api/allImages", requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        setTiles(result);
-        setIsLoading(false);
-      })
-      .catch((error) => console.error(error));
+    try {
+      fetch("http://localhost:4000/api/allImages", requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            setTiles(data);
+            setIsLoading(false);
+          }
+        })
+        .catch((error) => console.error(error));
+    } catch (error) {
+      console.err(error);
+    }
   }, []);
 
   return (

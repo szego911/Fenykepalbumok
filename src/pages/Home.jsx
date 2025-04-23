@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./css/Main.css";
 import Sidebar from "../components/Sidebar/Sidebar";
 import TileList from "../components/TileList/TileList";
+import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
   // --- Kép feltöltés modal állapotai ---
@@ -20,6 +21,8 @@ const Home = () => {
     name: "",
     description: "",
   });
+
+  const { isLoggedIn } = useAuth();
 
   // --- Modalok nyitása/zárása ---
   const handleOpenModal = () => setShowModal(true);
@@ -104,18 +107,26 @@ const Home = () => {
       <div className="content">
         <div className="home">
           <div className="title d-flex justify-content-between align-items-center m-4">
-            <button
-              onClick={handleOpenModal}
-              className="btn btn-success btn-sm mr-4"
-            >
-              + Kép feltöltése
-            </button>
-            <button
-              onClick={handleOpenAlbumModal}
-              className="btn btn-info btn-sm"
-            >
-              + Album létrehozása
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={handleOpenModal}
+                className="btn btn-success btn-sm mr-4"
+              >
+                + Kép feltöltése
+              </button>
+            ) : (
+              <></>
+            )}
+            {isLoggedIn ? (
+              <button
+                onClick={handleOpenAlbumModal}
+                className="btn btn-info btn-sm"
+              >
+                + Album létrehozása
+              </button>
+            ) : (
+              <></>
+            )}
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
           <TileList />

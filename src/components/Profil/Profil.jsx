@@ -1,17 +1,27 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, Component } from "react";
+import React, { useState } from "react";
 import "./Profil.css";
 import Sidebar from "../Sidebar/Sidebar";
-import { Link } from "react-router";
+import { useAuth } from "../../hooks/useAuth";
 
 //TODO: needs more work, renavigate when no userdata
 const Profil = () => {
-  const user = JSON.parse(localStorage.getItem("userData"));
+  const { isLoggedIn, user } = useAuth();
 
-  const [uname, setUname] = useState(user.nev);
-  const [email, setEmail] = useState(user.email);
-  const [city, setCity] = useState(user.cityId);
-  const [regdate, setRegDate] = useState(user.reg_datum);
+  const [uname, setUname] = useState(user?.nev || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [city, setCity] = useState(user?.cityId || "");
+  const [regdate, setRegDate] = useState(user?.reg_datum || "");
+
+  if (!isLoggedIn) {
+    return (
+      <div className="d-flex vh-100 custom-bg">
+        <Sidebar />
+        <div class="profil shadow">
+          Kérlek jelentkezz <a href="/login">itt</a>, hogy használni tudd!
+        </div>
+      </div>
+    );
+  }
 
   function formatDateToYMD(dateStr) {
     const date = new Date(dateStr);
