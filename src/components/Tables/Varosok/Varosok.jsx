@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import "../../Login/Login.css";
+import "../../../pages/css/Main.css";
 import { Link } from "react-router";
 import Sidebar from "../../Sidebar/Sidebar";
 
@@ -8,6 +8,9 @@ const Varosok = () => {
   const [nev, setNev] = useState("");
   const [megye, setMegye] = useState("");
   const [iranyitoszam, setIranyitoszam] = useState("");
+
+  const [torlendoId, setTorlendoId] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const createVaros = () => {
     const raw = JSON.stringify({
@@ -36,6 +39,30 @@ const Varosok = () => {
       })
       .catch((error) => console.error(error));
   };
+
+  const deleteVaros = () => {
+    if (!torlendoId) {
+      alert("Kérlek adj meg egy ID-t.");
+      return;
+    }
+
+    fetch(`http://localhost:4000/api/delete/varos/${torlendoId}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("A város sikeresen törölve.");
+        } else {
+          alert("A megadott id-vel egyetlen város sem rendelkezik.");
+        }
+      })
+      .catch((error) => console.error("Hiba történt: ", error));
+
+    setShowModal(false); // bezárjuk a modált
+    setTorlendoId(""); // ürítjük az inputot
+  };
+
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
       <Sidebar />
@@ -117,6 +144,39 @@ const Varosok = () => {
           >
             Létrehoz
           </button>
+          <button
+            type="button"
+            className="btn btn-danger ms-2"
+            onClick={() => setShowModal(true)}
+          >
+            Város törlése
+          </button>
+
+          {showModal && (
+            <div className="modal-backdrop">
+              <div className="modal-content-small">
+                <h2 className="text-center mb-2">Város törlése ID alapján</h2>
+                <input
+                  type="number"
+                  className="form-control m-3"
+                  placeholder="Add meg az ID-t"
+                  value={torlendoId}
+                  onChange={(e) => setTorlendoId(e.target.value)}
+                />
+                <div className="d-flex justify-content-end">
+                  <button
+                    className="btn btn-secondary me-2"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Mégse
+                  </button>
+                  <button className="btn btn-danger" onClick={deleteVaros}>
+                    Törlés
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

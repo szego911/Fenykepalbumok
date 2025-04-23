@@ -84,7 +84,7 @@ const Sidebar = () => {
           className="menu-item"
           to="/varosok"
         >
-          Varosok
+          Városok
         </NavLink>
       </nav>
     </div>
