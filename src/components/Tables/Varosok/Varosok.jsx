@@ -24,9 +24,15 @@ const Varosok = () => {
     return (
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
+
+
         <div className="profil shadow">
-          Ez a városok kezelője, kérlek jelentkezz <a href="/login">itt</a>,
-          hogy használni tudd!
+          Ez a városok kezelője, kérlek jelentkezz{" "}
+          <a href="/login">
+            <span className="text-primary underline-on-hover">itt</span>
+          </a>
+          , hogy használni tudd!
+
         </div>
       </div>
     );

@@ -66,6 +66,14 @@ const Sidebar = () => {
           exact="true"
           activeclassname="active"
           className="menu-item"
+          to="/albums"
+        >
+          Albumok
+        </NavLink>
+        <NavLink
+          exact="true"
+          activeclassname="active"
+          className="menu-item"
           to="/categories"
         >
           Kategóriák

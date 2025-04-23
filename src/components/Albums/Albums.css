@@ -1,0 +1,38 @@
+.albums-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  flex: 0 0 250px;
+  background-color: #f0f0f0;
+  border-right: 1px solid #ddd;
+}
+
+.albums-page {
+  flex: 1;
+  margin-left: 200px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.albums-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.album-item {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.album-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}

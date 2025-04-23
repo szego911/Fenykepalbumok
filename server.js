@@ -477,6 +477,73 @@ app.post("/api/create/album", async (req, res) => {
   }
 });
 
+app.delete("/api/delete/album/:id", async (req, res) => {
+  const albumId = req.params.id;
+
+  let conn;
+  try {
+    conn = await connectDB();
+
+    const result = await conn.execute(
+      `DELETE FROM albumok WHERE album_id = :album_id`,
+      { album_id: albumId },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: "❌ Nincs ilyen album azonosítóval" });
+    }
+
+    res.json({ message: "✅ Album sikeresen törölve", success: true });
+  } catch (err) {
+    console.error("Hiba az album törlésekor:", err);
+    res.status(500).json({ error: "❌ Hiba az album törlése során", err });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+app.patch("/api/update/album/:id", async (req, res) => {
+  const albumId = req.params.id;
+  const { nev, leiras } = req.body;
+
+  if (!nev && !leiras) {
+    return res.status(400).json({ error: "❌ Az 'nev' vagy 'leiras' mező kötelező" });
+  }
+
+  let conn;
+  try {
+    conn = await connectDB();
+
+    const fields = [];
+    const values = { album_id: albumId };
+
+    if (nev) {
+      fields.push("nev = :nev");
+      values.nev = nev;
+    }
+    if (leiras) {
+      fields.push("leiras = :leiras");
+      values.leiras = leiras;
+    }
+
+    const sql = `UPDATE albumok SET ${fields.join(", ")} WHERE album_id = :album_id`;
+
+    const result = await conn.execute(sql, values, { autoCommit: true });
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: "❌ Nincs ilyen album azonosítóval" });
+    }
+
+    res.json({ message: "✅ Album sikeresen módosítva", success: true });
+  } catch (err) {
+    console.error("Hiba az album módosítása során:", err);
+    res.status(500).json({ error: "❌ Hiba az album módosítása során", err });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ error: `❌ Multer hiba: ${err.message}` });

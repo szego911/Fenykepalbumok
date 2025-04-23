@@ -6,6 +6,7 @@ import Register from "./components/Register/Register";
 import Profil from "./components/Profil/Profil";
 import BestImages from "./components/BestImages/BestImages";
 import Varosok from "./components/Tables/Varosok/Varosok";
+import Albums from "./components/Albums/Albums";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/image/:id" element={<BestImages />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/varosok" element={<Varosok />} />
+          <Route path="/albums" element={<Albums />} />
 
           <Route path="*" element={<Home />} />
         </Routes>

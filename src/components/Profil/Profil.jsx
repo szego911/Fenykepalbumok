@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Profil.css";
+import "../../pages/css/Main.css";
 import Sidebar from "../Sidebar/Sidebar";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -17,7 +18,11 @@ const Profil = () => {
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
         <div class="profil shadow">
-          Kérlek jelentkezz <a href="/login">itt</a>, hogy használni tudd!
+          Kérlek jelentkezz{" "}
+          <a href="/login">
+            <span className="text-primary underline-on-hover">itt</span>
+          </a>
+          , hogy használni tudd!
         </div>
       </div>
     );
