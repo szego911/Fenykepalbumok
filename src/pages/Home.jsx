@@ -140,7 +140,6 @@ const Home = () => {
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Kép címe:{""}
-                    </label>
                     <input
                       type="text"
                       name="title"
@@ -149,12 +148,12 @@ const Home = () => {
                       className="form-control"
                       required
                     />
+                    </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Helyszín:{""}
-                    </label>
                     <input
                       type="text"
                       name="location"
@@ -163,12 +162,12 @@ const Home = () => {
                       className="form-control"
                       required
                     />
+                    </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Albumhoz hozzáadás:{""}
-                    </label>
                     <select
                       name="album"
                       value={formData.album}
@@ -182,12 +181,12 @@ const Home = () => {
                       <option value="művészet">Művészet</option>
                       {/* Itt kérjük majd le az AB-ból a friss adatokat */}
                     </select>
+                    </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Kép feltöltése:
-                    </label>
                     <input
                       type="file"
                       name="file"
@@ -196,12 +195,12 @@ const Home = () => {
                       className="form-control"
                       required
                     />
+                    </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Rövid leírás
-                    </label>
                     <textarea
                       name="description"
                       value={formData.description}
@@ -211,6 +210,7 @@ const Home = () => {
                       required
                       maxLength={150}
                     />
+                    </label>
                   </div>
 
                   <div className="d-flex justify-content-between mt-3">
@@ -239,7 +239,6 @@ const Home = () => {
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Album neve
-                    </label>
                     <input
                       type="text"
                       name="name"
@@ -248,12 +247,12 @@ const Home = () => {
                       className="form-control"
                       required
                     />
+                    </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Rövid leírás
-                    </label>
                     <textarea
                       name="description"
                       value={albumData.description}
@@ -263,6 +262,7 @@ const Home = () => {
                       maxLength={150}
                       required
                     />
+                    </label>
                   </div>
 
                   <div className="d-flex justify-content-between mt-3">

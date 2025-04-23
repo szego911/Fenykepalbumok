@@ -2,3 +2,14 @@
   overflow: hidden;
   margin: auto;
 }
+
+.tile-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.tile-actions .btn {
+  padding: 5px 10px;
+  font-size: 12px;
+}

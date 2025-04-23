@@ -16,6 +16,8 @@ function Tile({
   feltoltes_datum,
   helyszin_varos_id,
   kep,
+  onEdit,
+  onDelete,
 }) {
   //const navigate = useNavigate();
 
@@ -48,6 +50,20 @@ function Tile({
           </Typography>
           <Typography textColor="#fff">{leiras}</Typography>
           <Typography textColor="#fff">Album: {album_id}</Typography>
+          <div className="tile-actions">
+            <button
+              className="btn btn-warning btn-sm"
+              onClick={() => onEdit(kep_id)}
+            >
+              Módosítás
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => onDelete(kep_id)}
+            >
+              Törlés
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
