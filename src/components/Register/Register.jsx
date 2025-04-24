@@ -9,6 +9,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [userName, setUserName] = useState("");
   // eslint-disable-next-line no-unused-vars
   const [cityId, setCityId] = useState("2");
@@ -20,26 +21,30 @@ const Register = () => {
       cityId,
     });
 
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: raw,
-      redirect: "follow",
-    };
+    if (password == password2) {
+      const requestOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: raw,
+        redirect: "follow",
+      };
 
-    fetch("http://localhost:4000/api/register", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          alert("Sikeres Regisztráció! Most jelentkezz be!");
-          navigate("/login");
-        } else {
-          throw new Error(
-            "Server returned unsuccessful response!" + data.error
-          );
-        }
-      })
-      .catch((error) => console.error("Error regist user: ", error));
+      fetch("http://localhost:4000/api/register", requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            alert("Sikeres Regisztráció! Most jelentkezz be!");
+            navigate("/login");
+          } else {
+            throw new Error(
+              "Server returned unsuccessful response!" + data.error
+            );
+          }
+        })
+        .catch((error) => console.error("Error regist user: ", error));
+    } else {
+      alert("Jelszavak nem egyeznek!");
+    }
   };
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
@@ -55,6 +60,7 @@ const Register = () => {
                 className="form-control"
                 id="username"
                 aria-describedby="emailHelp"
+                
                 name="username"
                 onChange={(e) => setUserName(e.target.value)}
               />
@@ -154,6 +160,7 @@ const Register = () => {
                 className="form-control"
                 id="password2"
                 name="password2"
+                onChange={(e) => setPassword2(e.target.value)}
               />
             </div>
           </form>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Albums.css";
 import Sidebar from "../Sidebar/Sidebar";
+import { useAuth } from "../../hooks/useAuth";
 
 const Albums = () => {
   const [albums, setAlbums] = useState([]);
@@ -10,69 +11,94 @@ const Albums = () => {
   const [editData, setEditData] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
+  const { isLoggedIn } = useAuth();
+
   useEffect(() => {
-    fetchAlbums()
+    fetchAlbums();
   }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="d-flex vh-100 custom-bg">
+        <Sidebar />
+        <div class="profil shadow">
+          Kérlek jelentkezz be{" "}
+          <a href="/login">
+            <span className="text-primary underline-on-hover">itt</span>
+          </a>
+          , hogy használni tudd!
+        </div>
+      </div>
+    );
+  }
 
   const fetchAlbums = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/get/albumok")
-      const result = await response.json()
-      setAlbums(result)
-      setIsLoading(false)
+      const response = await fetch("http://localhost:4000/api/get/albumok");
+      const result = await response.json();
+      setAlbums(result);
+      setIsLoading(false);
     } catch (error) {
-      console.error("Hiba az albumok lekérdezésekor:", error)
+      console.error("Hiba az albumok lekérdezésekor:", error);
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/delete/album/${id}`, {
-        method: "DELETE",
-      });
-  
+      const response = await fetch(
+        `http://localhost:4000/api/delete/album/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       if (!response.ok) {
         const error = await response.json();
         console.error("Backend hiba:", error);
         return;
       }
-  
+
       const result = await response.json();
       console.log(result);
-      setAlbums((prevAlbums) => prevAlbums.filter((album) => album.ALBUM_ID !== id));
+      setAlbums((prevAlbums) =>
+        prevAlbums.filter((album) => album.ALBUM_ID !== id)
+      );
     } catch (error) {
       console.error("Hiba az album törlésekor:", error);
     }
   };
 
   const handleEdit = (album) => {
-    setEditData(album)
-    setEditModal(true)
+    setEditData(album);
+    setEditModal(true);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-  
+
     const updateData = {
       nev: editData.NEV,
       leiras: editData.LEIRAS,
     };
-  
+
     try {
-      const response = await fetch(`http://localhost:4000/api/update/album/${editData.ALBUM_ID}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
-  
+      const response = await fetch(
+        `http://localhost:4000/api/update/album/${editData.ALBUM_ID}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+
       if (!response.ok) {
         const error = await response.json();
         console.error("Backend hiba:", error);
         return;
       }
-  
+
       const result = await response.json();
       console.log(result);
       setEditModal(false);
@@ -83,7 +109,7 @@ const Albums = () => {
   };
 
   const handleAddSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     try {
       const response = await fetch("http://localhost:4000/api/create/album", {
@@ -93,22 +119,22 @@ const Albums = () => {
           nev: formData.name,
           leiras: formData.description,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        console.error("Backend hiba:", error)
-        return
+        const error = await response.json();
+        console.error("Backend hiba:", error);
+        return;
       }
 
-      const result = await response.json()
-      console.log(result)
-      setAddModal(false)
-      fetchAlbums()
+      const result = await response.json();
+      console.log(result);
+      setAddModal(false);
+      fetchAlbums();
     } catch (error) {
-      console.error("Hiba az album létrehozása során:", error)
+      console.error("Hiba az album létrehozása során:", error);
     }
-  }
+  };
 
   return (
     <div className="d-flex vh-100 custom-bg">
@@ -130,10 +156,16 @@ const Albums = () => {
                 <h3>{album.NEV}</h3>
                 <p>{album.LEIRAS}</p>
                 <div className="album-actions">
-                  <button className="btn btn-warning btn-sm" onClick={() => handleEdit(album)}>
+                  <button
+                    className="btn btn-warning btn-sm"
+                    onClick={() => handleEdit(album)}
+                  >
                     Módosítás
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(album.ALBUM_ID)}>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(album.ALBUM_ID)}
+                  >
                     Törlés
                   </button>
                 </div>
@@ -152,7 +184,9 @@ const Albums = () => {
                   <input
                     type="text"
                     value={editData.NEV}
-                    onChange={(e) => setEditData((prev) => ({ ...prev, NEV: e.target.value }))}
+                    onChange={(e) =>
+                      setEditData((prev) => ({ ...prev, NEV: e.target.value }))
+                    }
                     className="form-control"
                     required
                   />
@@ -161,7 +195,12 @@ const Albums = () => {
                   <label>Leírás:</label>
                   <textarea
                     value={editData.LEIRAS}
-                    onChange={(e) => setEditData((prev) => ({ ...prev, LEIRAS: e.target.value }))}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        LEIRAS: e.target.value,
+                      }))
+                    }
                     className="form-control"
                     rows={3}
                     required
@@ -171,7 +210,11 @@ const Albums = () => {
                   <button type="submit" className="btn btn-success">
                     Mentés
                   </button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setEditModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setEditModal(false)}
+                  >
                     Mégsem
                   </button>
                 </div>
@@ -191,7 +234,12 @@ const Albums = () => {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       className="form-control"
                       required
                     />
@@ -202,7 +250,12 @@ const Albums = () => {
                     Leírás:
                     <textarea
                       value={formData.description}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       className="form-control"
                       rows={3}
                       required
@@ -213,7 +266,11 @@ const Albums = () => {
                   <button type="submit" className="btn btn-success">
                     Létrehozás
                   </button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setAddModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setAddModal(false)}
+                  >
                     Mégsem
                   </button>
                 </div>
@@ -223,7 +280,7 @@ const Albums = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Albums
+export default Albums;

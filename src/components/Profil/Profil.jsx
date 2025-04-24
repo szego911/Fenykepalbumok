@@ -18,7 +18,7 @@ const Profil = () => {
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
         <div class="profil shadow">
-          Kérlek jelentkezz{" "}
+          Kérlek jelentkezz be{" "}
           <a href="/login">
             <span className="text-primary underline-on-hover">itt</span>
           </a>
