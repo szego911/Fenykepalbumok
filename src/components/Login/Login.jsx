@@ -9,8 +9,22 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   const login = () => {
+    setLoginError("");
+
+    if (!email || !password) {
+      setLoginError("Kérlek tölts ki minden mezőt a bejelentkezéshez.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setLoginError("Kérlek érvényes email-címet adj meg.");
+      return;
+    }
+
     const raw = JSON.stringify({
       email,
       password,
@@ -24,26 +38,36 @@ const Login = () => {
     };
 
     fetch("http://localhost:4000/api/login", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          localStorage.setItem("userData", JSON.stringify(data.user));
-          alert("Sikeres bejelentkezés!");
-          navigate("/profil");
-        } else {
-          throw new Error(
-            "Server returned unsuccessful response!" + data.error
-          );
+      .then(async (response) => {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.success) {
+            localStorage.setItem("userData", JSON.stringify(data.user));
+            alert("Sikeres bejelentkezés!");
+            navigate("/profil");
+          } else {
+            throw new Error(
+              data.error || "Nem megfelelő email-cím vagy jelszó."
+            );
+          }
+        } catch (error) {
+          throw new Error("Nem megfelelő email-cím vagy jelszó.");
         }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => setLoginError(error.message));
   };
+
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
       <Sidebar />
       <div className="login">
         <div className="login-container shadow">
           <h1 className="text-center poppins">Bejelentkezés</h1>
+
+          {/* Hibák megjelenítése */}
+          {loginError && <div className="alert alert-danger">{loginError}</div>}
+
           <form>
             <div className="form-group">
               <label htmlFor="exampleInputEmail1">Email-cím</label>
