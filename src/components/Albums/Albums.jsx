@@ -13,9 +13,20 @@ const Albums = () => {
 
   const { isLoggedIn } = useAuth();
 
+  const fetchAlbums = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/get/albumok");
+      const result = await response.json();
+      setAlbums(result);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Hiba az albumok lekérdezésekor:", error);
+    }
+  };
+
   useEffect(() => {
     fetchAlbums();
-  }, []);
+  }, [isLoggedIn]);
 
   if (!isLoggedIn) {
     return (
@@ -31,17 +42,6 @@ const Albums = () => {
       </div>
     );
   }
-
-  const fetchAlbums = async () => {
-    try {
-      const response = await fetch("http://localhost:4000/api/get/albumok");
-      const result = await response.json();
-      setAlbums(result);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Hiba az albumok lekérdezésekor:", error);
-    }
-  };
 
   const handleDelete = async (id) => {
     try {

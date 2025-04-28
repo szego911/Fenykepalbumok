@@ -3,12 +3,16 @@ import "./TileList.css";
 import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Modal from "@mui/material/Modal";
 
 function TileList() {
   const [tiles, setTiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
+
+  const [selectedTile, setSelectedTile] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchTiles();
@@ -21,14 +25,18 @@ function TileList() {
         setTiles(result);
         setIsLoading(false);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error("Hiba a képek lekérdezésekor:", error);
+        setIsLoading(false);
+      });
   };
 
   const handleDelete = (id) => {
     fetch(`http://localhost:4000/api/delete/kep/${id}`, { method: "DELETE" })
       .then((response) => {
         if (response.ok) {
-          setTiles((prevTiles) => prevTiles.filter((tile) => tile.KEP_ID !== id));
+          const updatedTiles = tiles.filter((tile) => tile.KEP_ID !== id);
+          setTiles(updatedTiles);
         } else {
           console.error("Hiba történt a törlés során");
         }
@@ -36,136 +44,121 @@ function TileList() {
       .catch((error) => console.error(error));
   };
 
-  const handleEdit = (tile) => {
+  const handleEdit = (id) => {
+    const tile = tiles.find((t) => t.KEP_ID === id);
     setEditData(tile);
     setEditModal(true);
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("felhasznalo_id", editData.FELHASZNALO_ID);
-    formData.append("album_id", editData.ALBUM_ID);
-    formData.append("cim", editData.CIM);
-    formData.append("leiras", editData.LEIRAS);
-    formData.append("helyszin_varos_id", editData.HELYSZIN_VAROS_ID);
-    if (editData.KEP) {
-      formData.append("kep", editData.KEP);
-    }
-
-    await fetch(`http://localhost:4000/api/updatePatch/kep/${editData.KEP_ID}`, {
-      method: "PATCH",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        console.log(result);
-        setEditModal(false);
-        fetchTiles();
-      })
-      .catch((error) => console.error(error));
+  const handleTileClick = (tile) => {
+    setSelectedTile(tile);
+    setModalOpen(true);
   };
-
 
   return (
     <div className="tile-list">
-      {!isLoading ? (
+      {isLoading ? (
+        <Box
+          sx={{
+            display: "flex",
+            width: "70vw",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "10px",
+            margin: "auto",
+          }}
+        >
+          <CircularProgress />
+          <p>Betöltés...</p>
+        </Box>
+      ) : (
         tiles.map((tile) => (
           <Tile
             key={tile.KEP_ID}
             kep_id={tile.KEP_ID}
-            felhasznalo_id={tile.FELHASZNALO_ID}
-            album_id={tile.ALBUM_ID}
+            album_title={tile.ALBUM_NEV}
             cim={tile.CIM}
-            leiras={tile.LEIRAS}
-            feltoltes_datum={tile.FELTOLTES_DATUM}
-            helyszin_varos_id={tile.HELYSZIN_VAROS_ID}
+            varos={tile.VAROS_NEV}
             kep={tile.KEP}
-            onEdit={() => handleEdit(tile)}
+            onEdit={handleEdit}
             onDelete={handleDelete}
+            onClick={() => handleTileClick(tile)}
           />
         ))
-      ) : (
-        <Box sx={{ display: "flex" }}>
-          <CircularProgress />
-        </Box>
       )}
 
-      {/* Módosítási modal */}
-      {editModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content-small">
-            <h2 className="poppins">Kép módosítása</h2>
-            <form onSubmit={handleEditSubmit}>
-              <div className="form-group">
-                <label>Kép címe:
-                  <input
-                    type="text"
-                    value={editData.CIM}
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, CIM: e.target.value }))
-                    }
-                    className="form-control"
-                    required
-                  />
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Leírás:
-                  <textarea
-                    value={editData.LEIRAS}
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, LEIRAS: e.target.value }))
-                    }
-                    className="form-control"
-                    rows={3}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Helyszín azonosító:
-                  <input
-                    type="text"
-                    value={editData.HELYSZIN_VAROS_ID}
-                    onChange={(e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        HELYSZIN_VAROS_ID: e.target.value,
-                      }))
-                    }
-                    className="form-control"
-                    required
-                  />
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Új kép (opcionális):
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, KEP: e.target.files[0] }))
-                    }
-                    className="form-control"
-                  />
-                </label>
-              </div>
-              <div className="d-flex justify-content-between mt-3">
-                <button type="submit" className="btn btn-success">
-                  Mentés
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setEditModal(false)}
+      {/* Képre kattintva kinagyított nézet */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            width: "80vw",
+            height: "80vh",
+            bgcolor: "background.paper",
+            margin: "auto",
+            marginTop: "5vh",
+            boxShadow: 24,
+            p: 2,
+            overflow: "hidden",
+          }}
+        >
+          {/* Bal oldal: nagy kép */}
+          <Box sx={{ flex: 1, overflow: "hidden" }}>
+            {selectedTile && (
+              <img
+                src={`data:image/jpeg;base64,${selectedTile.KEP}`}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            )}
+          </Box>
+
+          {/* Jobb oldal: adatok fehér háttérrel */}
+          <Box
+            sx={{
+              flex: 1,
+              padding: 2,
+              overflowY: "auto",
+              bgcolor: "white",
+            }}
+          >
+            {selectedTile && (
+              <>
+                <h2 id="modal-title">{selectedTile.CIM}</h2>
+                <p>
+                  <strong>Album:</strong> {selectedTile.ALBUM_NEV}
+                </p>
+                <p>
+                  <strong>Város:</strong> {selectedTile.VAROS_NEV}
+                </p>
+
+                <h3>Hozzászólások:</h3>
+                <div
+                  style={{
+                    maxHeight: "300px",
+                    overflowY: "auto",
+                    border: "1px solid #ccc",
+                    padding: "10px",
+                  }}
                 >
-                  Mégsem
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {/* Hozzászólások itt jöhetnének - jelenleg fix példák */}
+                  <p>Ez egy minta hozzászólás.</p>
+                  <p>Második komment.</p>
+                  <p>Valami szöveg...</p>
+                  <p>Valami szöveg 2...</p>
+                  <p>És még több szöveg...</p>
+                </div>
+              </>
+            )}
+          </Box>
+        </Box>
+      </Modal>
     </div>
   );
 }
