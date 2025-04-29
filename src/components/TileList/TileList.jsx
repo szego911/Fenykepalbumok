@@ -6,7 +6,10 @@ import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 
 function TileList() {
-  const [tiles, setTiles] = useState([]);
+  const [tiles, setTiles] = useState(() => {
+    const stored = localStorage.getItem("images");
+    return stored ? JSON.parse(stored) : [];
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -15,18 +18,23 @@ function TileList() {
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchTiles();
-  }, []);
+    if (tiles.length > 0) {
+      setIsLoading(false);
+    } else {
+      fetchTiles();
+    }
+  }, [tiles]);
 
   const fetchTiles = () => {
     fetch("http://localhost:4000/api/allImages")
       .then((response) => response.json())
       .then((result) => {
         setTiles(result);
+        localStorage.setItem("images", JSON.stringify(result));
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error("Hiba a képek lekérdezésekor:", error);
+        console.error("Server error:", error);
         setIsLoading(false);
       });
   };
@@ -48,6 +56,36 @@ function TileList() {
     const tile = tiles.find((t) => t.KEP_ID === id);
     setEditData(tile);
     setEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("felhasznalo_id", editData.FELHASZNALO_ID);
+    formData.append("album_id", editData.ALBUM_ID);
+    formData.append("cim", editData.CIM);
+    formData.append("leiras", editData.LEIRAS);
+    formData.append("helyszin_varos_id", editData.HELYSZIN_VAROS_ID);
+    if (editData.KEP) {
+      formData.append("kep", editData.KEP);
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/updatePatch/kep/${editData.KEP_ID}`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      );
+      const result = await response.json();
+      console.log(result);
+
+      setEditModal(false);
+      fetchTiles();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleTileClick = (tile) => {
