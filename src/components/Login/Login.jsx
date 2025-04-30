@@ -52,6 +52,7 @@ const Login = () => {
             );
           }
         } catch (error) {
+          console.error("Login feldolgozás hiba:", error);
           throw new Error("Nem megfelelő email-cím vagy jelszó.");
         }
       })

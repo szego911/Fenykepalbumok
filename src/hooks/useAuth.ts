@@ -1,12 +1,26 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 export const useAuth = () => {
-  const user = useMemo(() => {
+  const [user, setUser] = useState(() => {
     const data = localStorage.getItem("userData");
     return data ? JSON.parse(data) : null;
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const data = localStorage.getItem("userData");
+      setUser(data ? JSON.parse(data) : null);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
-  const isLoggedIn = !!user;
-
-  return { user, isLoggedIn };
+  return {
+    user,
+    isLoggedIn: !!user,
+  };
 };

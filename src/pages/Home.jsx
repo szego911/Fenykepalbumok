@@ -23,7 +23,7 @@ const Home = () => {
     description: "",
   });
 
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   // --- Modalok nyitása/zárása ---
   const handleOpenModal = () => setShowModal(true);
@@ -64,8 +64,9 @@ const Home = () => {
   // --- Kép feltöltése a backendre (POST kérés FormData-val) ---
   const uploadImage = async () => {
     const formdata = new FormData();
-    formdata.append("felhasznalo_id", "1");
-    formdata.append("album_id", "1");
+    formdata.append("felhasznalo_id", user.id);
+    //TODO: album_id selected
+    formdata.append("album_id", "88");
     formdata.append("cim", formData.title);
     formdata.append("leiras", formData.description);
     formdata.append("helyszin_varos_id", formData.location);
