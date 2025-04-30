@@ -155,9 +155,11 @@ app.post("/api/login", async (req, res) => {
     const conn = await connectDB();
 
     const result = await conn.execute(
-      `SELECT felhasznalo_id, felhasznalonev, email, jelszo_hash, varos_id, reg_datum
-       FROM felhasznalok 
-       WHERE email = :email`,
+      `SELECT f.felhasznalo_id, f.felhasznalonev, f.email, f.jelszo_hash,
+              f.reg_datum, v.nev AS varos_nev
+       FROM felhasznalok f
+       LEFT JOIN varosok v ON f.varos_id = v.varos_id
+       WHERE f.email = :email`,
       { email },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
@@ -182,13 +184,128 @@ app.post("/api/login", async (req, res) => {
         id: user.FELHASZNALO_ID,
         nev: user.FELHASZNALONEV,
         email: user.EMAIL,
-        cityId: user.VAROS_ID,
+        city: user.VAROS_NEV || "Ismeretlen",
         reg_datum: user.REG_DATUM,
       },
     });
   } catch (err) {
     console.error(err);
     res.status(500).send("Hiba: Hiba történt a bejelentkezés során");
+  }
+});
+
+app.patch("/api/update/felhasznalo/:id", async (req, res) => {
+  const id = req.params.id;
+  let { nev, email, city } = req.body;
+
+  if (!nev && !email && !city) {
+    return res
+      .status(400)
+      .send("Hiba: Legalább egy mezőt meg kell adni frissítéshez");
+  }
+
+  if (email && !emailRegex.test(email)) {
+    return res.status(400).send("Hiba: Hibás email cím formátum");
+  }
+
+  try {
+    const conn = await connectDB();
+
+    const fields = [];
+    const binds = { id };
+
+    if (nev) {
+      fields.push("felhasznalonev = :nev");
+      binds.nev = nev;
+    }
+
+    if (email) {
+      fields.push("email = :email");
+      binds.email = email;
+    }
+
+    if (city) {
+      // Ellenőrizzük, hogy létezik-e a város név
+      const cityCheck = await conn.execute(
+        `SELECT varos_id FROM varosok WHERE nev = :city`,
+        { city },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      if (cityCheck.rows.length === 0) {
+        await conn.close();
+        return res.status(400).send("Hiba: Nem létező város");
+      }
+
+      const cityId = cityCheck.rows[0].VAROS_ID;
+      fields.push("varos_id = :cityId");
+      binds.cityId = cityId;
+    }
+
+    const updateQuery = `
+      UPDATE felhasznalok
+      SET ${fields.join(", ")}
+      WHERE felhasznalo_id = :id
+    `;
+
+    await conn.execute(updateQuery, binds, { autoCommit: true });
+
+    const result = await conn.execute(
+      `SELECT f.felhasznalo_id AS id, f.felhasznalonev, f.email, f.reg_datum, v.nev AS varos_nev
+       FROM felhasznalok f
+       LEFT JOIN varosok v ON f.varos_id = v.varos_id
+       WHERE f.felhasznalo_id = :id`,
+      { id },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+
+    if (result.rows.length === 0) {
+      return res.status(404).send("Felhasználó nem található");
+    }
+
+    const updatedUser = result.rows[0];
+
+    res.status(200).json({
+      message: "✅ Sikeres frissítés",
+      success: true,
+      user: {
+        id: updatedUser.ID,
+        nev: updatedUser.FELHASZNALONEV,
+        email: updatedUser.EMAIL,
+        city: updatedUser.VAROS_NEV || "Ismeretlen",
+        reg_datum: updatedUser.REG_DATUM,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Hiba: Nem sikerült frissíteni a profilt");
+  }
+});
+
+app.delete("/api/delete/felhasznalo/:id", async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const conn = await connectDB();
+
+    const result = await conn.execute(
+      `DELETE FROM felhasznalok WHERE felhasznalo_id = :id`,
+      { id },
+      { autoCommit: true }
+    );
+
+    await conn.close();
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).send("Hiba: Felhasználó nem található");
+    }
+
+    res.status(200).json({ message: "✅ Felhasználó törölve" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Hiba: Nem sikerült törölni a felhasználót");
   }
 });
 
@@ -248,6 +365,7 @@ app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
   let conn;
   try {
     conn = await connectDB();
+
     await conn.execute(
       `INSERT INTO kepek 
         (felhasznalo_id, album_id, cim, leiras, feltoltes_datum, helyszin_varos_id, kep) 
@@ -267,7 +385,7 @@ app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
     res.status(200).json({ message: "✅ Kép sikeresen feltöltve" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "❌ Hiba a kép feltöltésekor" });
+    res.status(500).json({ error: "❌ Hiba a kép feltöltésekor", err: err });
   } finally {
     fs.unlinkSync(kepPath);
     if (conn) await conn.close();
@@ -463,7 +581,7 @@ app.patch(
 
 app.post("/api/create/album", async (req, res) => {
   const { nev, leiras } = req.body;
-  const felhasznalo_id = "1";
+  const felhasznalo_id = "20";
   try {
     const conn = await connectDB();
 
@@ -701,6 +819,20 @@ app.post("/api/create/varos", async (req, res) => {
   }
 });
 
+app.get("/api/varosok", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(`SELECT varos_id, nev FROM varosok`, [], {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+    await conn.close();
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Hiba a városok lekérésekor");
+  }
+});
+
 app.delete("/api/delete/varos/:id", async (req, res) => {
   const varos_id = req.params.id;
 
@@ -777,7 +909,7 @@ app.patch("/api/update/varos/:id", async (req, res) => {
   }
 });
 
-app.listen(4000, () => {
+app.listen(PORT, () => {
   console.log("✅ API fut: http://localhost:4000");
 });
 
