@@ -14,6 +14,7 @@ const Home = () => {
     description: "",
     location: "",
   });
+  const [refreshImages, setRefreshImages] = useState(false);
 
   // --- Album létrehozás modal állapotai ---
   const [showAlbumModal, setShowAlbumModal] = useState(false);
@@ -77,8 +78,11 @@ const Home = () => {
     };
 
     await fetch("http://localhost:4000/api/upload/image", requestOptions)
-      .then((response) => response.text())
-      .then((result) => console.log(result))
+      .then((response) => response.json())
+      .then((result) => {
+        alert(result.message);
+        setRefreshImages((prev) => !prev);
+      })
       .catch((error) => console.error(error));
   };
 
@@ -129,7 +133,7 @@ const Home = () => {
             )}
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
-          <TileList />
+          <TileList refreshTrigger={refreshImages} />
 
           {/* Képfeltöltés Modal */}
           {showModal && (
@@ -140,76 +144,76 @@ const Home = () => {
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Kép címe:{""}
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleImageUploadChange}
-                      className="form-control"
-                      required
-                    />
+                      <input
+                        type="text"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleImageUploadChange}
+                        className="form-control"
+                        required
+                      />
                     </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Helyszín:{""}
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleImageUploadChange}
-                      className="form-control"
-                      required
-                    />
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleImageUploadChange}
+                        className="form-control"
+                        required
+                      />
                     </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Albumhoz hozzáadás:{""}
-                    <select
-                      name="album"
-                      value={formData.album}
-                      onChange={handleImageUploadChange}
-                      className="form-control"
-                      required
-                    >
-                      <option value="">Válassz albumot</option>
-                      <option value="család">Család</option>
-                      <option value="nyaralás">Nyaralás</option>
-                      <option value="művészet">Művészet</option>
-                      {/* Itt kérjük majd le az AB-ból a friss adatokat */}
-                    </select>
+                      <select
+                        name="album"
+                        value={formData.album}
+                        onChange={handleImageUploadChange}
+                        className="form-control"
+                        required
+                      >
+                        <option value="">Válassz albumot</option>
+                        <option value="család">Család</option>
+                        <option value="nyaralás">Nyaralás</option>
+                        <option value="művészet">Művészet</option>
+                        {/* Itt kérjük majd le az AB-ból a friss adatokat */}
+                      </select>
                     </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Kép feltöltése:
-                    <input
-                      type="file"
-                      name="file"
-                      accept="image/*"
-                      onChange={handleImageUploadChange}
-                      className="form-control"
-                      required
-                    />
+                      <input
+                        type="file"
+                        name="file"
+                        accept="image/*"
+                        onChange={handleImageUploadChange}
+                        className="form-control"
+                        required
+                      />
                     </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Rövid leírás
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleImageUploadChange}
-                      className="form-control"
-                      rows={3}
-                      required
-                      maxLength={150}
-                    />
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleImageUploadChange}
+                        className="form-control"
+                        rows={3}
+                        required
+                        maxLength={150}
+                      />
                     </label>
                   </div>
 
@@ -239,29 +243,29 @@ const Home = () => {
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Album neve
-                    <input
-                      type="text"
-                      name="name"
-                      value={albumData.name}
-                      onChange={handleAlbumChange}
-                      className="form-control"
-                      required
-                    />
+                      <input
+                        type="text"
+                        name="name"
+                        value={albumData.name}
+                        onChange={handleAlbumChange}
+                        className="form-control"
+                        required
+                      />
                     </label>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
                       Rövid leírás
-                    <textarea
-                      name="description"
-                      value={albumData.description}
-                      onChange={handleAlbumChange}
-                      className="form-control"
-                      rows={3}
-                      maxLength={150}
-                      required
-                    />
+                      <textarea
+                        name="description"
+                        value={albumData.description}
+                        onChange={handleAlbumChange}
+                        className="form-control"
+                        rows={3}
+                        maxLength={150}
+                        required
+                      />
                     </label>
                   </div>
 

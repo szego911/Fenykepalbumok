@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 
-function TileList() {
+function TileList({ refreshTrigger }) {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
@@ -13,23 +13,22 @@ function TileList() {
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
-
-  const [selectedTile, setSelectedTile] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
     if (tiles.length > 0) {
       setIsLoading(false);
-    } else {
-      fetchTiles();
     }
-  }, [tiles]);
+    fetchTiles();
+  }, [refreshTrigger]);
 
   const fetchTiles = () => {
     fetch("http://localhost:4000/api/allImages")
       .then((response) => response.json())
       .then((result) => {
         setTiles(result);
+        localStorage.removeItem("images");
         localStorage.setItem("images", JSON.stringify(result));
         setIsLoading(false);
       })
@@ -39,17 +38,32 @@ function TileList() {
       });
   };
 
-  const handleDelete = (id) => {
-    fetch(`http://localhost:4000/api/delete/kep/${id}`, { method: "DELETE" })
+  const executeDelete = () => {
+    if (!deleteId) return;
+
+    fetch(`http://localhost:4000/api/delete/kep/${deleteId}`, {
+      method: "DELETE",
+    })
       .then((response) => {
         if (response.ok) {
-          const updatedTiles = tiles.filter((tile) => tile.KEP_ID !== id);
+          const updatedTiles = tiles.filter((tile) => tile.KEP_ID !== deleteId);
           setTiles(updatedTiles);
+          localStorage.removeItem("images");
+          localStorage.setItem("images", JSON.stringify(updatedTiles));
         } else {
           console.error("Hiba történt a törlés során");
         }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => console.error(error))
+      .finally(() => {
+        setDeleteModal(false);
+        setDeleteId(null);
+      });
+  };
+
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
   };
 
   const handleEdit = (id) => {
@@ -88,11 +102,6 @@ function TileList() {
     }
   };
 
-  const handleTileClick = (tile) => {
-    setSelectedTile(tile);
-    setModalOpen(true);
-  };
-
   return (
     <div className="tile-list">
       {isLoading ? (
@@ -119,84 +128,108 @@ function TileList() {
             varos={tile.VAROS_NEV}
             kep={tile.KEP}
             onEdit={handleEdit}
-            onDelete={handleDelete}
-            onClick={() => handleTileClick(tile)}
+            onDelete={confirmDelete}
           />
         ))
       )}
 
-      {/* Képre kattintva kinagyított nézet */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            width: "80vw",
-            height: "80vh",
-            bgcolor: "background.paper",
-            margin: "auto",
-            marginTop: "5vh",
-            boxShadow: 24,
-            p: 2,
-            overflow: "hidden",
-          }}
-        >
-          {/* Bal oldal: nagy kép */}
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
-            {selectedTile && (
-              <img
-                src={`data:image/jpeg;base64,${selectedTile.KEP}`}
-                alt=""
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            )}
-          </Box>
+      {editModal && editData && (
+        <div className="modal-backdrop">
+          <div className="modal-content-small">
+            <h2 className="poppins">Kép módosítása</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label className="form-label text-start w-100 fs-5 text">
+                  Cím
+                  <input
+                    type="text"
+                    name="cim"
+                    value={editData.CIM}
+                    onChange={(e) =>
+                      setEditData((prev) => ({ ...prev, CIM: e.target.value }))
+                    }
+                    className="form-control"
+                    required
+                  />
+                </label>
+              </div>
 
-          {/* Jobb oldal: adatok fehér háttérrel */}
-          <Box
-            sx={{
-              flex: 1,
-              padding: 2,
-              overflowY: "auto",
-              bgcolor: "white",
-            }}
-          >
-            {selectedTile && (
-              <>
-                <h2 id="modal-title">{selectedTile.CIM}</h2>
-                <p>
-                  <strong>Album:</strong> {selectedTile.ALBUM_NEV}
-                </p>
-                <p>
-                  <strong>Város:</strong> {selectedTile.VAROS_NEV}
-                </p>
+              <div className="form-group">
+                <label className="form-label text-start w-100 fs-5 text">
+                  Rövid leírás
+                  <textarea
+                    name="leiras"
+                    value={editData.LEIRAS}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        LEIRAS: e.target.value,
+                      }))
+                    }
+                    className="form-control"
+                    rows={3}
+                    maxLength={150}
+                    required
+                  />
+                </label>
+              </div>
 
-                <h3>Hozzászólások:</h3>
-                <div
-                  style={{
-                    maxHeight: "300px",
-                    overflowY: "auto",
-                    border: "1px solid #ccc",
-                    padding: "10px",
-                  }}
+              <div className="form-group">
+                <label className="form-label text-start w-100 fs-5 text">
+                  Új kép feltöltése (nem kötelező)
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-control"
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        KEP: e.target.files[0],
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <div className="d-flex justify-content-between mt-3">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setEditModal(false)}
                 >
-                  {/* Hozzászólások itt jöhetnének - jelenleg fix példák */}
-                  <p>Ez egy minta hozzászólás.</p>
-                  <p>Második komment.</p>
-                  <p>Valami szöveg...</p>
-                  <p>Valami szöveg 2...</p>
-                  <p>És még több szöveg...</p>
-                </div>
-              </>
-            )}
-          </Box>
-        </Box>
-      </Modal>
+                  Mégsem
+                </button>
+                <button type="submit" className="btn btn-info">
+                  Mentés
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {deleteModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content-small">
+            <h4 className="poppins mb-3">
+              Biztosan törölni szeretnéd ezt a képet?
+            </h4>
+            <div className="d-flex justify-content-between">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setDeleteModal(false);
+                  setDeleteId(null);
+                }}
+              >
+                Mégsem
+              </button>
+              <button className="btn btn-danger" onClick={executeDelete}>
+                Törlés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
