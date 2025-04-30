@@ -3,40 +3,71 @@ import "./TileList.css";
 import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Modal from "@mui/material/Modal";
 
-function TileList() {
-  const [tiles, setTiles] = useState([]);
+function TileList({ refreshTrigger }) {
+  const [tiles, setTiles] = useState(() => {
+    const stored = localStorage.getItem("images");
+    return stored ? JSON.parse(stored) : [];
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
+    if (tiles.length > 0) {
+      setIsLoading(false);
+    }
     fetchTiles();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchTiles = () => {
     fetch("http://localhost:4000/api/allImages")
       .then((response) => response.json())
       .then((result) => {
         setTiles(result);
+        localStorage.removeItem("images");
+        localStorage.setItem("images", JSON.stringify(result));
         setIsLoading(false);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error("Server error:", error);
+        setIsLoading(false);
+      });
   };
 
-  const handleDelete = (id) => {
-    fetch(`http://localhost:4000/api/delete/kep/${id}`, { method: "DELETE" })
+  const executeDelete = () => {
+    if (!deleteId) return;
+
+    fetch(`http://localhost:4000/api/delete/kep/${deleteId}`, {
+      method: "DELETE",
+    })
       .then((response) => {
         if (response.ok) {
-          setTiles((prevTiles) => prevTiles.filter((tile) => tile.KEP_ID !== id));
+          const updatedTiles = tiles.filter((tile) => tile.KEP_ID !== deleteId);
+          setTiles(updatedTiles);
+          localStorage.removeItem("images");
+          localStorage.setItem("images", JSON.stringify(updatedTiles));
         } else {
           console.error("Hiba történt a törlés során");
         }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => console.error(error))
+      .finally(() => {
+        setDeleteModal(false);
+        setDeleteId(null);
+      });
   };
 
-  const handleEdit = (tile) => {
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+
+  const handleEdit = (id) => {
+    const tile = tiles.find((t) => t.KEP_ID === id);
     setEditData(tile);
     setEditModal(true);
   };
@@ -53,54 +84,66 @@ function TileList() {
       formData.append("kep", editData.KEP);
     }
 
-    await fetch(`http://localhost:4000/api/updatePatch/kep/${editData.KEP_ID}`, {
-      method: "PATCH",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        console.log(result);
-        setEditModal(false);
-        fetchTiles();
-      })
-      .catch((error) => console.error(error));
-  };
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/updatePatch/kep/${editData.KEP_ID}`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      );
+      const result = await response.json();
+      console.log(result);
 
+      setEditModal(false);
+      fetchTiles();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="tile-list">
-      {!isLoading ? (
+      {isLoading ? (
+        <Box
+          sx={{
+            display: "flex",
+            width: "70vw",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "10px",
+            margin: "auto",
+          }}
+        >
+          <CircularProgress />
+          <p>Betöltés...</p>
+        </Box>
+      ) : (
         tiles.map((tile) => (
           <Tile
             key={tile.KEP_ID}
             kep_id={tile.KEP_ID}
-            felhasznalo_id={tile.FELHASZNALO_ID}
-            album_id={tile.ALBUM_ID}
+            album_title={tile.ALBUM_NEV}
             cim={tile.CIM}
-            leiras={tile.LEIRAS}
-            feltoltes_datum={tile.FELTOLTES_DATUM}
-            helyszin_varos_id={tile.HELYSZIN_VAROS_ID}
+            varos={tile.VAROS_NEV}
             kep={tile.KEP}
-            onEdit={() => handleEdit(tile)}
-            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onDelete={confirmDelete}
           />
         ))
-      ) : (
-        <Box sx={{ display: "flex" }}>
-          <CircularProgress />
-        </Box>
       )}
 
-      {/* Módosítási modal */}
-      {editModal && (
+      {editModal && editData && (
         <div className="modal-backdrop">
           <div className="modal-content-small">
             <h2 className="poppins">Kép módosítása</h2>
             <form onSubmit={handleEditSubmit}>
               <div className="form-group">
-                <label>Kép címe:
+                <label className="form-label text-start w-100 fs-5 text">
+                  Cím
                   <input
                     type="text"
+                    name="cim"
                     value={editData.CIM}
                     onChange={(e) =>
                       setEditData((prev) => ({ ...prev, CIM: e.target.value }))
@@ -110,50 +153,45 @@ function TileList() {
                   />
                 </label>
               </div>
+
               <div className="form-group">
-                <label>Leírás:
+                <label className="form-label text-start w-100 fs-5 text">
+                  Rövid leírás
                   <textarea
+                    name="leiras"
                     value={editData.LEIRAS}
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, LEIRAS: e.target.value }))
-                    }
-                    className="form-control"
-                    rows={3}
-                    required
-                  />
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Helyszín azonosító:
-                  <input
-                    type="text"
-                    value={editData.HELYSZIN_VAROS_ID}
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        HELYSZIN_VAROS_ID: e.target.value,
+                        LEIRAS: e.target.value,
                       }))
                     }
                     className="form-control"
+                    rows={3}
+                    maxLength={150}
                     required
                   />
                 </label>
               </div>
+
               <div className="form-group">
-                <label>Új kép (opcionális):
+                <label className="form-label text-start w-100 fs-5 text">
+                  Új kép feltöltése (nem kötelező)
                   <input
                     type="file"
-                    onChange={(e) =>
-                      setEditData((prev) => ({ ...prev, KEP: e.target.files[0] }))
-                    }
+                    accept="image/*"
                     className="form-control"
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        KEP: e.target.files[0],
+                      }))
+                    }
                   />
                 </label>
               </div>
+
               <div className="d-flex justify-content-between mt-3">
-                <button type="submit" className="btn btn-success">
-                  Mentés
-                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -161,8 +199,34 @@ function TileList() {
                 >
                   Mégsem
                 </button>
+                <button type="submit" className="btn btn-info">
+                  Mentés
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {deleteModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content-small">
+            <h4 className="poppins mb-3">
+              Biztosan törölni szeretnéd ezt a képet?
+            </h4>
+            <div className="d-flex justify-content-between">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setDeleteModal(false);
+                  setDeleteId(null);
+                }}
+              >
+                Mégsem
+              </button>
+              <button className="btn btn-danger" onClick={executeDelete}>
+                Törlés
+              </button>
+            </div>
           </div>
         </div>
       )}

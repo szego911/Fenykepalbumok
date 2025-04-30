@@ -197,20 +197,27 @@ app.post("/api/login", async (req, res) => {
 app.get("/api/allImages", async (req, res) => {
   try {
     const conn = await connectDB();
-    const result = await conn.execute(`SELECT * FROM kepek`, [], {
-      outFormat: oracledb.OUT_FORMAT_OBJECT,
-    });
+    const result = await conn.execute(
+      `SELECT 
+         k.*, 
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV
+       FROM kepek k
+       JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
 
     const rows = [];
 
     for (const row of result.rows) {
       const newRow = { ...row };
 
-      // Végigmegyünk az összes mezőn, és ha BLOB, base64-re konvertáljuk
+      // BLOB konvertálás (pl. képek)
       for (const key of Object.keys(newRow)) {
         const val = newRow[key];
         if (val && typeof val === "object" && typeof val.on === "function") {
-          // Ez egy BLOB (Lob), base64-re alakítjuk
           newRow[key] = await lobToBase64(val);
         }
       }
@@ -491,7 +498,9 @@ app.delete("/api/delete/album/:id", async (req, res) => {
     );
 
     if (result.rowsAffected === 0) {
-      return res.status(404).json({ error: "❌ Nincs ilyen album azonosítóval" });
+      return res
+        .status(404)
+        .json({ error: "❌ Nincs ilyen album azonosítóval" });
     }
 
     res.json({ message: "✅ Album sikeresen törölve", success: true });
@@ -508,7 +517,9 @@ app.patch("/api/update/album/:id", async (req, res) => {
   const { nev, leiras } = req.body;
 
   if (!nev && !leiras) {
-    return res.status(400).json({ error: "❌ Az 'nev' vagy 'leiras' mező kötelező" });
+    return res
+      .status(400)
+      .json({ error: "❌ Az 'nev' vagy 'leiras' mező kötelező" });
   }
 
   let conn;
@@ -527,12 +538,16 @@ app.patch("/api/update/album/:id", async (req, res) => {
       values.leiras = leiras;
     }
 
-    const sql = `UPDATE albumok SET ${fields.join(", ")} WHERE album_id = :album_id`;
+    const sql = `UPDATE albumok SET ${fields.join(
+      ", "
+    )} WHERE album_id = :album_id`;
 
     const result = await conn.execute(sql, values, { autoCommit: true });
 
     if (result.rowsAffected === 0) {
-      return res.status(404).json({ error: "❌ Nincs ilyen album azonosítóval" });
+      return res
+        .status(404)
+        .json({ error: "❌ Nincs ilyen album azonosítóval" });
     }
 
     res.json({ message: "✅ Album sikeresen módosítva", success: true });

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import "./Profil.css";
 import "../../pages/css/Main.css";
 import Sidebar from "../Sidebar/Sidebar";
@@ -6,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 //TODO: needs more work, renavigate when no userdata
 const Profil = () => {
+  const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
 
   const [uname, setUname] = useState(user?.nev || "");
@@ -17,7 +19,7 @@ const Profil = () => {
     return (
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
-        <div class="profil shadow">
+        <div className="profil shadow">
           Kérlek jelentkezz be{" "}
           <a href="/login">
             <span className="text-primary underline-on-hover">itt</span>
@@ -31,10 +33,15 @@ const Profil = () => {
   function formatDateToYMD(dateStr) {
     const date = new Date(dateStr);
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // hónap: 0-indexelt
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
+
+  const logOut = () => {
+    localStorage.removeItem("userData");
+    navigate("/");
+  };
 
   return (
     <div className="d-flex vh-100 custom-bg">
@@ -71,7 +78,12 @@ const Profil = () => {
           {formatDateToYMD(regdate)} <br />
         </p>
 
-        <button className="btn btn-danger mt-4">Profil törlése</button>
+        <div className="d-flex gap-3 justify-content-center ">
+          <button onClick={logOut} className="btn btn-primary mt-4">
+            Kijelentkezés
+          </button>
+          <button className="btn btn-danger mt-4">Profil törlése</button>
+        </div>
       </div>
     </div>
   );

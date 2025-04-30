@@ -3,13 +3,20 @@
   margin: auto;
 }
 
-.tile-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
 .tile-actions .btn {
   padding: 5px 10px;
   font-size: 12px;
+}
+
+.tile-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.tile-options {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
 }
