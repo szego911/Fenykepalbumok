@@ -12,7 +12,7 @@ const Profil = () => {
   const [uname, setUname] = useState(user?.nev || "");
   const [email, setEmail] = useState(user?.email || "");
   const [city, setCity] = useState(user?.city || "");
-  const [regdate, setRegDate] = useState(user?.reg_datum || "");
+  const regdate = user?.reg_datum || "";
   const [cities, setCities] = useState([]);
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -85,12 +85,17 @@ const Profil = () => {
   return (
     <div className="d-flex vh-100 custom-bg">
       <Sidebar />
-      <div className="profil shadow">
-        <img src="./anonym-picture.png" alt="anonym-picture.png" />
-        <br />
+      <div className="profil shadow d-flex flex-column align-items-center py-3">
+        <img
+          src="./anonym-picture.png"
+          alt="profilkép"
+          className="rounded-circle mb-1"
+          style={{ width: "100px", height: "100px", objectFit: "cover" }}
+        />
+
         <label
           htmlFor="real-file-input"
-          className="btn btn-secondary btn-sm custom-file-upload mb-4 btn-sm rounded-pill px-4"
+          className="btn btn-secondary btn-sm custom-file-upload mb-2 rounded-pill px-4"
         >
           Új profilkép feltöltése
         </label>
@@ -99,37 +104,46 @@ const Profil = () => {
           id="real-file-input"
           name="myImage"
           accept="image/png, image/gif, image/jpeg"
+          style={{ display: "none" }}
         />
-        <p>
-          <b>Felhasználónév: </b>
-          {uname} <br />
-        </p>
-        <p>
-          <b>Email-cím: </b>
-          {email} <br />
-        </p>
-        <p>
-          <b>Lakhely: </b>
-          {city} <br />
-        </p>
-        <p>
-          <b>Regisztráció dátuma: </b>
-          {formatDateToYMD(regdate)} <br />
-        </p>
 
-        <div className="d-flex gap-3 justify-content-center ">
-          <button onClick={logOut} className="btn btn-primary mt-4">
-            Kijelentkezés
-          </button>
-          <button
-            className="btn btn-warning mt-4"
-            onClick={() => setShowEditModal(true)}
-          >
-            Profil módosítása
-          </button>
-          <button className="btn btn-danger mt-4" onClick={handleDeleteProfile}>
-            Profil törlése
-          </button>
+        <div className="w-100 px-4 py-3" style={{ maxWidth: "500px" }}>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Felhasználónév</label>
+            <div className="form-control bg-light">{uname}</div>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label fw-bold">Email-cím</label>
+            <div className="form-control bg-light">{email}</div>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label fw-bold">Lakhely</label>
+            <div className="form-control bg-light">{city}</div>
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label fw-bold">Regisztráció dátuma</label>
+            <div className="form-control bg-light">
+              {formatDateToYMD(regdate)}
+            </div>
+          </div>
+
+          <div className="d-flex gap-3 justify-content-center">
+            <button onClick={logOut} className="btn btn-primary">
+              Kijelentkezés
+            </button>
+            <button
+              className="btn btn-warning"
+              onClick={() => setShowEditModal(true)}
+            >
+              Profil módosítása
+            </button>
+            <button className="btn btn-danger" onClick={handleDeleteProfile}>
+              Profil törlése
+            </button>
+          </div>
         </div>
       </div>
 
