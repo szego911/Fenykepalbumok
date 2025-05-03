@@ -24,17 +24,19 @@ const Home = () => {
   const [userAlbums, setUserAlbums] = useState([]);
   const { isLoggedIn, user } = useAuth();
 
-  // Albumok lekérése a bejelentkezett felhasználónak
   useEffect(() => {
-    if (user && user.id) {
-      fetch(`http://localhost:4000/api/get/albumok/${user.id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("Kapott album adatok:", data);
+    fetch("http://localhost:4000/api/get/albumok")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
           setUserAlbums(data);
-        });
-    }
-  }, [user]);
+        } else {
+          console.error("Invalid data format", data);
+          setUserAlbums([]);
+        }
+      })
+      .catch((error) => console.error("Albumok lekérése sikertelen:", error));
+  }, []);
 
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
@@ -45,7 +47,7 @@ const Home = () => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "album" ? Number(value) : files ? files[0] : value,
+      [name]: files ? files[0] : value,
     }));
   };
 
@@ -182,13 +184,15 @@ const Home = () => {
                         className="form-control"
                         required
                       >
-                        <option disabled>Válassz albumot</option>
+                        <option value="" disabled hidden>
+                          Válassz albumot
+                        </option>
                         {userAlbums.map((album, index) => (
                           <option
                             key={album.album_id || index}
                             value={album.album_id}
                           >
-                            {album.nev || "Névtelen album"}
+                            {album.NEV || "Névtelen album"}
                           </option>
                         ))}
                       </select>
