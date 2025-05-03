@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import "./TileList.css";
+import "./CategoryList.css";
 import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
-function TileList({ refreshTrigger }) {
+function CategoryList({ refreshTrigger }) {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
@@ -233,4 +233,4 @@ function TileList({ refreshTrigger }) {
   );
 }
 
-export default TileList;
+export default CategoryList;
