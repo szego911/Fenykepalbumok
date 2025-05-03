@@ -686,6 +686,33 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// Albumok lekérése adott felhasználóhoz
+app.get("/api/get/albumok/:felhasznalo_id", async (req, res) => {
+  const felhasznalo_id = Number(req.params.felhasznalo_id);
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT album_id, nev, leiras FROM albumok WHERE felhasznalo_id = :id`,
+      { id: felhasznalo_id }
+    );
+
+    await conn.close();
+
+    // OracleDB: tömbként adja vissza a sorokat
+    const albums = result.rows.map((row) => ({
+      id: row[0],
+      nev: row[1],
+      leiras: row[2],
+    }));
+
+    res.json(albums);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Hiba történt az albumok lekérdezésekor" });
+  }
+});
+
 //ÉRTÉKELÉSEK
 
 //HOZZÁSZÓLÁSOK
