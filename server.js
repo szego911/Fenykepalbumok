@@ -936,6 +936,97 @@ app.patch("/api/update/varos/:id", async (req, res) => {
   }
 });
 
+//KATEGORIAK
+
+app.get("/api/kategoriak", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT kategoria_id, nev FROM kategoriak`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a kategóriák lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Összetett lekérdezések
+
+//Mely városokban készült képekhez érkezett legalább 5 hozzászólás?
+app.get("/api/citiesWithMinComments", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT v.nev AS varos_nev, COUNT(h.id) AS hozzaszolasok_szama
+       FROM kepek k
+       JOIN varosok v ON k.varos_id = v.id
+       JOIN hozzaszolasok h ON h.kep_id = k.id
+       GROUP BY v.nev
+       HAVING COUNT(h.id) >= 5`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a városok lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Képek, amelyekhez a legtöbb hozzászólás érkezett (TOP 5)
+app.get("/api/topCommentedImages", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT k.cim, COUNT(h.id) AS hozzaszolasok_szama
+       FROM kepek k
+       LEFT JOIN hozzaszolasok h ON h.kep_id = k.id
+       GROUP BY k.cim
+       ORDER BY hozzaszolasok_szama DESC
+       FETCH FIRST 5 ROWS ONLY`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a képek kommentjeinek lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Felhasználók, akiknek az albumjaiban a képekre legalább 10 értékelés érkezett átlagosan
+app.get("/api/usersWithAvgRatingOver10", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT f.felhasznalonev, AVG(ertek.ertekeles) AS atlag_ertekeles
+       FROM felhasznalok f
+       JOIN albumok a ON a.felhasznalo_id = f.id
+       JOIN kepek k ON k.album_id = a.id
+       JOIN ertekelesek ertek ON ertek.kep_id = k.id
+       GROUP BY f.felhasznalonev
+       HAVING COUNT(ertek.id) >= 10`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba az értékelések lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("✅ API fut: http://localhost:4000");
 });
