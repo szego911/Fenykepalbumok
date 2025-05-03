@@ -43,11 +43,19 @@ const Home = () => {
   const handleOpenAlbumModal = () => setShowAlbumModal(true);
   const handleCloseAlbumModal = () => setShowAlbumModal(false);
 
-  const handleImageUploadChange = (e) => {
-    const { name, value, files } = e.target;
+  const handleFormFieldChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value,
+      [name]: value,
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setFormData((prev) => ({
+      ...prev,
+      file: file,
     }));
   };
 
@@ -74,7 +82,7 @@ const Home = () => {
   const uploadImage = async () => {
     const formdata = new FormData();
     formdata.append("felhasznalo_id", user.id);
-    formdata.append("album_id", Number(formData.album));
+    formdata.append("album_id", formData.album);
     formdata.append("cim", formData.title);
     formdata.append("leiras", formData.description);
     formdata.append("helyszin_varos_id", formData.location);
@@ -153,7 +161,7 @@ const Home = () => {
                         type="text"
                         name="title"
                         value={formData.title}
-                        onChange={handleImageUploadChange}
+                        onChange={handleFormFieldChange}
                         className="form-control"
                         required
                       />
@@ -167,7 +175,7 @@ const Home = () => {
                         type="text"
                         name="location"
                         value={formData.location}
-                        onChange={handleImageUploadChange}
+                        onChange={handleFormFieldChange}
                         className="form-control"
                         required
                       />
@@ -180,7 +188,7 @@ const Home = () => {
                       <select
                         name="album"
                         value={formData.album}
-                        onChange={handleImageUploadChange}
+                        onChange={handleFormFieldChange}
                         className="form-control"
                         required
                       >
@@ -189,8 +197,8 @@ const Home = () => {
                         </option>
                         {userAlbums.map((album, index) => (
                           <option
-                            key={album.album_id || index}
-                            value={album.album_id}
+                            key={album.ALBUM_ID || index}
+                            value={album.ALBUM_ID}
                           >
                             {album.NEV || "Névtelen album"}
                           </option>
@@ -206,7 +214,7 @@ const Home = () => {
                         type="file"
                         name="file"
                         accept="image/*"
-                        onChange={handleImageUploadChange}
+                        onChange={handleFileChange}
                         className="form-control"
                         required
                       />
@@ -219,7 +227,7 @@ const Home = () => {
                       <textarea
                         name="description"
                         value={formData.description}
-                        onChange={handleImageUploadChange}
+                        onChange={handleFormFieldChange}
                         className="form-control"
                         rows={3}
                         required

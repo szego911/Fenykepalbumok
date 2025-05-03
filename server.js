@@ -984,22 +984,74 @@ app.get("/api/citiesWithMinComments", async (req, res) => {
 app.get("/api/topCommentedImages", async (req, res) => {
   try {
     const conn = await connectDB();
-    const result = await conn.execute(
-      `SELECT k.cim, COUNT(h.id) AS hozzaszolasok_szama
+
+    // 1. lépés: TOP 5 KÉP_ID hozzászólások szerint
+    const topResult = await conn.execute(
+      `SELECT k.KEP_ID
        FROM kepek k
-       LEFT JOIN hozzaszolasok h ON h.kep_id = k.id
-       GROUP BY k.cim
-       ORDER BY hozzaszolasok_szama DESC
+       LEFT JOIN hozzaszolasok h ON h.KEP_ID = k.KEP_ID
+       GROUP BY k.KEP_ID
+       ORDER BY COUNT(h.HOZZASZOLAS_ID) DESC
        FETCH FIRST 5 ROWS ONLY`,
       [],
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
+    const topIds = topResult.rows.map((r) => r.KEP_ID);
+
+    if (topIds.length === 0) {
+      await conn.close();
+      return res.json([]);
+    }
+
+    // 2. lépés: teljes adat lekérdezése BLOB-bal együtt
+    const placeholders = topIds.map((_, i) => `:${i}`).join(",");
+    const fullResult = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         k.KEP,
+         k.ALBUM_ID,
+         k.HELYSZIN_VAROS_ID,
+         k.KATEGORIA_ID,
+         k.LEIRAS,
+         k.FELTOLTES_DATUM,
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV
+       FROM kepek k
+       JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       WHERE k.KEP_ID IN (${placeholders})`,
+      topIds,
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const rows = [];
+
+    for (const row of fullResult.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
     await conn.close();
-    res.json(result.rows);
+    res.json(rows);
   } catch (err) {
-    console.error("Hiba a képek kommentjeinek lekérdezésekor:", err);
-    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+    console.error("Hiba a top kommentelt képek lekérdezésekor:", err);
+    res
+      .status(500)
+      .json({
+        message: "Hiba a top kommentelt képek lekérdezésekor",
+        error: err,
+      });
   }
 });
 

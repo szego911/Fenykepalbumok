@@ -1,42 +1,19 @@
 import React, { useState, useEffect } from "react";
-import "./TileList.css";
 import Tile from "../Tile/Tile";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
 
-function TileList({ refreshTrigger }) {
+function CategoryList({ images }) {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
   });
-  const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
-    if (tiles.length > 0) {
-      setIsLoading(false);
-    }
-    fetchTiles();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTrigger]);
-
-  const fetchTiles = () => {
-    fetch("http://localhost:4000/api/allImages")
-      .then((response) => response.json())
-      .then((result) => {
-        setTiles(result);
-        localStorage.removeItem("images");
-        localStorage.setItem("images", JSON.stringify(result));
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Server error:", error);
-        setIsLoading(false);
-      });
-  };
+    setTiles(images);
+  }, [images]);
 
   const executeDelete = () => {
     if (!deleteId) return;
@@ -96,7 +73,6 @@ function TileList({ refreshTrigger }) {
       console.log(result);
 
       setEditModal(false);
-      fetchTiles();
     } catch (error) {
       console.error(error);
     }
@@ -104,34 +80,18 @@ function TileList({ refreshTrigger }) {
 
   return (
     <div className="tile-list">
-      {isLoading ? (
-        <Box
-          sx={{
-            display: "flex",
-            width: "70vw",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "10px",
-            margin: "auto",
-          }}
-        >
-          <CircularProgress />
-          <p>Betöltés...</p>
-        </Box>
-      ) : (
-        tiles.map((tile) => (
-          <Tile
-            key={tile.KEP_ID}
-            kep_id={tile.KEP_ID}
-            album_title={tile.ALBUM_NEV}
-            cim={tile.CIM}
-            varos={tile.VAROS_NEV}
-            kep={tile.KEP}
-            onEdit={handleEdit}
-            onDelete={confirmDelete}
-          />
-        ))
-      )}
+      {tiles.map((tile) => (
+        <Tile
+          key={tile.KEP_ID}
+          kep_id={tile.KEP_ID}
+          album_title={tile.ALBUM_NEV}
+          cim={tile.CIM}
+          varos={tile.VAROS_NEV}
+          kep={tile.KEP}
+          onEdit={handleEdit}
+          onDelete={confirmDelete}
+        />
+      ))}
 
       {editModal && editData && (
         <div className="modal-backdrop">
@@ -234,4 +194,4 @@ function TileList({ refreshTrigger }) {
   );
 }
 
-export default TileList;
+export default CategoryList;
