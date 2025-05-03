@@ -9,7 +9,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 
-function Tile({ kep_id, cim, kep, onEdit, onDelete, onClick }) {
+function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -40,7 +40,6 @@ function Tile({ kep_id, cim, kep, onEdit, onDelete, onClick }) {
           }}
         />
         <CardContent sx={{ justifyContent: "flex-end" }}>
-          {/* Menü gomb animációval */}
           <IconButton
             aria-label="options"
             onClick={handleMenuOpen}
@@ -57,7 +56,6 @@ function Tile({ kep_id, cim, kep, onEdit, onDelete, onClick }) {
             <MoreVertIcon />
           </IconButton>
 
-          {/* Menü popup */}
           <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
             <MenuItem
               onClick={() => {
@@ -77,9 +75,14 @@ function Tile({ kep_id, cim, kep, onEdit, onDelete, onClick }) {
             </MenuItem>
           </Menu>
 
-          {/* Szövegek */}
+          {/* Kép címe */}
           <Typography level="title-lg" textColor="#fff">
             {cim}
+          </Typography>
+
+          {/* Album név megjelenítése */}
+          <Typography level="body-sm" textColor="#ddd">
+            {album_title}
           </Typography>
         </CardContent>
       </Card>

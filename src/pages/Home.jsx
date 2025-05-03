@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/Main.css";
 import Sidebar from "../components/Sidebar/Sidebar";
 import TileList from "../components/TileList/TileList";
 import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
-  // --- Kép feltöltés modal állapotai ---
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -16,16 +15,27 @@ const Home = () => {
   });
   const [refreshImages, setRefreshImages] = useState(false);
 
-  // --- Album létrehozás modal állapotai ---
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [albumData, setAlbumData] = useState({
     name: "",
     description: "",
   });
 
+  const [userAlbums, setUserAlbums] = useState([]);
   const { isLoggedIn, user } = useAuth();
 
-  // --- Modalok nyitása/zárása ---
+  // Albumok lekérése a bejelentkezett felhasználónak
+  useEffect(() => {
+    if (user && user.id) {
+      fetch(`http://localhost:4000/api/get/albumok/${user.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Kapott album adatok:", data);
+          setUserAlbums(data);
+        });
+    }
+  }, [user]);
+
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
   const handleOpenAlbumModal = () => setShowAlbumModal(true);
@@ -35,16 +45,15 @@ const Home = () => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value, // fájl esetén a fájlobjektumot menti, egyébként a szöveges értéket
+      [name]: name === "album" ? Number(value) : files ? files[0] : value,
     }));
   };
 
-  // --- Album űrlap mezőinek kezelése ---
   const handleAlbumChange = (e) => {
     const { name, value } = e.target;
     setAlbumData((prev) => ({
       ...prev,
-      [name]: value, // albumnév és leírás frissítése
+      [name]: value,
     }));
   };
 
@@ -54,19 +63,16 @@ const Home = () => {
     handleCloseModal();
   };
 
-  // --- Album űrlap beküldése ---
   const handleAlbumSubmit = (e) => {
     e.preventDefault();
     uploadAlbum();
-    handleCloseAlbumModal(); // Modal bezárása feltöltés után
+    handleCloseAlbumModal();
   };
 
-  // --- Kép feltöltése a backendre (POST kérés FormData-val) ---
   const uploadImage = async () => {
     const formdata = new FormData();
     formdata.append("felhasznalo_id", user.id);
-    //TODO: album_id selected
-    formdata.append("album_id", "88");
+    formdata.append("album_id", Number(formData.album));
     formdata.append("cim", formData.title);
     formdata.append("leiras", formData.description);
     formdata.append("helyszin_varos_id", formData.location);
@@ -112,25 +118,21 @@ const Home = () => {
       <div className="content">
         <div className="home">
           <div className="title d-flex justify-content-between align-items-center m-4">
-            {isLoggedIn ? (
+            {isLoggedIn && (
               <button
                 onClick={handleOpenModal}
                 className="btn btn-success btn-sm mr-4"
               >
                 + Kép feltöltése
               </button>
-            ) : (
-              <></>
             )}
-            {isLoggedIn ? (
+            {isLoggedIn && (
               <button
                 onClick={handleOpenAlbumModal}
                 className="btn btn-info btn-sm"
               >
                 + Album létrehozása
               </button>
-            ) : (
-              <></>
             )}
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
@@ -144,7 +146,7 @@ const Home = () => {
                 <form onSubmit={handleImageUploadSubmit}>
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
-                      Kép címe:{""}
+                      Kép címe:
                       <input
                         type="text"
                         name="title"
@@ -158,7 +160,7 @@ const Home = () => {
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
-                      Helyszín:{""}
+                      Helyszín:
                       <input
                         type="text"
                         name="location"
@@ -172,7 +174,7 @@ const Home = () => {
 
                   <div className="form-group">
                     <label className="form-label text-start w-100 fs-5 text">
-                      Albumhoz hozzáadás:{""}
+                      Albumhoz hozzáadás:
                       <select
                         name="album"
                         value={formData.album}
@@ -180,11 +182,15 @@ const Home = () => {
                         className="form-control"
                         required
                       >
-                        <option value="">Válassz albumot</option>
-                        <option value="család">Család</option>
-                        <option value="nyaralás">Nyaralás</option>
-                        <option value="művészet">Művészet</option>
-                        {/* Itt kérjük majd le az AB-ból a friss adatokat */}
+                        <option disabled>Válassz albumot</option>
+                        {userAlbums.map((album, index) => (
+                          <option
+                            key={album.album_id || index}
+                            value={album.album_id}
+                          >
+                            {album.nev || "Névtelen album"}
+                          </option>
+                        ))}
                       </select>
                     </label>
                   </div>
