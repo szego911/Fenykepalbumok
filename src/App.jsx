@@ -14,12 +14,12 @@ function App() {
     <div>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Home />} />
           <Route path="/best_images" element={<BestImages />} />
           <Route path="/categories" element={<Categories />} />
-          <Route path="/image/:id" element={<BestImages />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/varosok" element={<Varosok />} />
           <Route path="/albums" element={<Albums />} />

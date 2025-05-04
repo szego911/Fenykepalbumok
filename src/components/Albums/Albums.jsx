@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Albums.css";
+import { Link } from "react-router";
 import Sidebar from "../Sidebar/Sidebar";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -32,11 +33,11 @@ const Albums = () => {
     return (
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
-        <div class="profil shadow">
+        <div className="profil notLoggedin  mx-auto d-flex justify-content-center align-items-center shadow">
           Kérlek jelentkezz be{" "}
-          <a href="/login">
+          <Link href="/login">
             <span className="text-primary underline-on-hover">itt</span>
-          </a>
+          </Link>
           , hogy használni tudd!
         </div>
       </div>

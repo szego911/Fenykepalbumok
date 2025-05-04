@@ -7,10 +7,10 @@
   text-decoration: none;
 }
 .login-container {
-  width: 580px;
+  width: 50%;
   background: white;
   margin: auto;
-  padding: 40px 60px;
+  padding: 50px 60px;
   border-radius: 16px;
 }
 .login-container h1 {
@@ -39,6 +39,7 @@
   position: relative;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
 }
 
 .underline-on-hover::after {

@@ -1,3 +1,25 @@
 .mt-20 {
   margin-top: 100px;
 }
+
+.underline-on-hover {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.underline-on-hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background-color: currentColor;
+  transition: width 0.2s ease-in-out;
+}
+
+.underline-on-hover:hover::after {
+  width: 100%;
+}

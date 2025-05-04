@@ -156,7 +156,7 @@ app.post("/api/login", async (req, res) => {
 
     const result = await conn.execute(
       `SELECT f.felhasznalo_id, f.felhasznalonev, f.email, f.jelszo_hash,
-              f.reg_datum, v.nev AS varos_nev
+              f.reg_datum, f.role, v.nev AS varos_nev
        FROM felhasznalok f
        LEFT JOIN varosok v ON f.varos_id = v.varos_id
        WHERE f.email = :email`,
@@ -186,6 +186,7 @@ app.post("/api/login", async (req, res) => {
         email: user.EMAIL,
         city: user.VAROS_NEV || "Ismeretlen",
         reg_datum: user.REG_DATUM,
+        role: user.ROLE,
       },
     });
   } catch (err) {
@@ -1046,12 +1047,10 @@ app.get("/api/topCommentedImages", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Hiba a top kommentelt képek lekérdezésekor:", err);
-    res
-      .status(500)
-      .json({
-        message: "Hiba a top kommentelt képek lekérdezésekor",
-        error: err,
-      });
+    res.status(500).json({
+      message: "Hiba a top kommentelt képek lekérdezésekor",
+      error: err,
+    });
   }
 });
 

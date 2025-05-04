@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router";
 import "./Register.css";
-import Sidebar from "../Sidebar/Sidebar";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,8 +9,16 @@ const Register = () => {
   const [password2, setPassword2] = useState("");
   const [userName, setUserName] = useState("");
 
-  const [registerError, setRegisterError] = useState(""); // Hibakezelő állapot
-  const [cityId, setCityId] = useState("2"); // TODO: később dinamikusan beállítani
+  const [registerError, setRegisterError] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [cities, setCities] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:4000/api/varosok")
+      .then((res) => res.json())
+      .then((data) => setCities(data))
+      .catch((err) => console.error("Városok betöltése sikertelen:", err));
+  }, []);
 
   const register = () => {
     setRegisterError("");
@@ -59,11 +66,15 @@ const Register = () => {
       .catch((error) => setRegisterError(error.message));
   };
 
+  const guestUser = () => {
+    navigate("/home");
+  };
+
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
-      <Sidebar />
       <div className="login">
         <div className="mt-20 login-container shadow">
+          <h3 className="text-center poppins">PhotoShare</h3>
           <h1 className="text-center poppins">Regisztráció</h1>
 
           {/* Hibák megjelenítése */}
@@ -97,6 +108,28 @@ const Register = () => {
             </div>
 
             <div className="form-group">
+              <label className="form-label text-start w-100">
+                Város:
+                <select
+                  name="city"
+                  value={cityId}
+                  onChange={(e) => setCityId(e.target.value)}
+                  className="form-control"
+                  required
+                >
+                  <option value="" disabled hidden>
+                    Válassz várost
+                  </option>
+                  {cities.map((city) => (
+                    <option key={city.VAROS_ID} value={city.VAROS_ID}>
+                      {city.NEV}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="form-group">
               <label htmlFor="password">Jelszó</label>
               <input
                 type="password"
@@ -117,14 +150,25 @@ const Register = () => {
                 onChange={(e) => setPassword2(e.target.value)}
               />
             </div>
-
-            {/* Megye, lakcím stb. mezőket itt most még nem kötjük be a cityId-hoz */}
           </form>
 
-          <div className="d-flex mt-4">
-            <button className="btn btn-primary" onClick={register}>
-              Regisztráció
-            </button>
+          <button className="btn btn-primary" onClick={register}>
+            Regisztráció
+          </button>
+          <div className="d-flex">
+            <p className="login-login">
+              Van már fiókod? Lépj be{" "}
+              <Link to="/login">
+                <span className="text-primary underline-on-hover">itt</span>
+              </Link>{" "}
+              vagy folytastsd{" "}
+              <span
+                className="text-primary underline-on-hover"
+                onClick={guestUser}
+              >
+                vendégként
+              </span>
+            </p>
           </div>
         </div>
       </div>

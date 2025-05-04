@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate,Link } from "react-router";
 import "./Login.css";
-import { Link } from "react-router";
-import Sidebar from "../Sidebar/Sidebar";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -59,11 +57,15 @@ const Login = () => {
       .catch((error) => setLoginError(error.message));
   };
 
+  const guestUser = () => {
+    navigate("/home");
+  };
+
   return (
     <div className="d-flex vh-100 custom-bg align-items-center">
-      <Sidebar />
       <div className="login">
         <div className="login-container shadow">
+          <h3 className="text-center poppins">PhotoShare</h3>
           <h1 className="text-center poppins">Bejelentkezés</h1>
 
           {/* Hibák megjelenítése */}
@@ -96,12 +98,21 @@ const Login = () => {
           <button type="button" className="btn btn-primary" onClick={login}>
             Bejelentkezés
           </button>
-          <p className="login-login">
-            Nincs még fiókod? Regisztrálj{" "}
-            <Link to="/register">
-              <span className="text-primary underline-on-hover">itt</span>
-            </Link>
-          </p>
+          <div className="d-flex">
+            <p className="login-login">
+              Nincs még fiókod? Regisztrálj{" "}
+              <Link to="/register">
+                <span className="text-primary underline-on-hover">itt</span>
+              </Link>{" "}
+              vagy folytastsd{" "}
+              <span
+                className="text-primary underline-on-hover"
+                onClick={guestUser}
+              >
+                vendégként
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

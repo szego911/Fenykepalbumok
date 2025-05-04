@@ -2,8 +2,11 @@ import React from "react";
 import "./Sidebar.css";
 import { NavLink } from "react-router";
 import { MdCancel } from "react-icons/md";
+import { useAuth } from "../../hooks/useAuth";
 
 const Sidebar = () => {
+  const { isLoggedIn, isAdmin } = useAuth();
+
   function toggleMenu() {
     document.querySelector(".menu-toggle").classList.toggle("d-n");
     document.querySelector(".sidebar").classList.toggle("is-active");
@@ -26,14 +29,7 @@ const Sidebar = () => {
         <MdCancel size={50} />
       </div>
       <nav className="menu">
-        <NavLink
-          exact="true"
-          activeclassname="active"
-          className="menu-item"
-          to="/login"
-        >
-          Bejelentkezés
-        </NavLink>
+        <h3>Fényképalbumok</h3>
       </nav>
       <hr />
 
@@ -42,18 +38,23 @@ const Sidebar = () => {
           exact="true"
           activeclassname="active"
           className="menu-item"
-          to="/"
+          to="/home"
         >
           Főoldal
         </NavLink>
-        <NavLink
-          exact="true"
-          activeclassname="active"
-          className="menu-item"
-          to="/profil"
-        >
-          Profil
-        </NavLink>
+        {isLoggedIn ? (
+          <NavLink
+            exact="true"
+            activeclassname="active"
+            className="menu-item"
+            to="/profil"
+          >
+            Profil
+          </NavLink>
+        ) : (
+          <></>
+        )}
+
         <NavLink
           exact="true"
           activeclassname="active"
@@ -78,14 +79,7 @@ const Sidebar = () => {
         >
           Kategóriák
         </NavLink>
-        <NavLink
-          exact="true"
-          activeclassname="active"
-          className="menu-item"
-          to="/register"
-        >
-          Regisztráció
-        </NavLink>
+
         <NavLink
           exact="true"
           activeclassname="active"
@@ -94,6 +88,18 @@ const Sidebar = () => {
         >
           Városok
         </NavLink>
+        {isAdmin ? (
+          <NavLink
+            exact="true"
+            activeclassname="active"
+            className="menu-item"
+            to="/user-admin"
+          >
+            Felhasználók
+          </NavLink>
+        ) : (
+          <></>
+        )}
       </nav>
     </div>
   );
