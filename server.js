@@ -156,7 +156,7 @@ app.post("/api/login", async (req, res) => {
 
     const result = await conn.execute(
       `SELECT f.felhasznalo_id, f.felhasznalonev, f.email, f.jelszo_hash,
-              f.reg_datum, v.nev AS varos_nev
+              f.reg_datum, f.role, v.nev AS varos_nev
        FROM felhasznalok f
        LEFT JOIN varosok v ON f.varos_id = v.varos_id
        WHERE f.email = :email`,
@@ -186,6 +186,7 @@ app.post("/api/login", async (req, res) => {
         email: user.EMAIL,
         city: user.VAROS_NEV || "Ismeretlen",
         reg_datum: user.REG_DATUM,
+        role: user.ROLE,
       },
     });
   } catch (err) {
@@ -933,6 +934,234 @@ app.patch("/api/update/varos/:id", async (req, res) => {
   } catch (err) {
     console.error("Hiba város frissítésekor:", err);
     res.status(500).json({ message: "Hiba város frissítésekor", error: err });
+  }
+});
+
+//KATEGORIAK
+
+app.get("/api/kategoriak", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT kategoria_id, nev FROM kategoriak`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a kategóriák lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Összetett lekérdezések
+
+//Mely városokban készült képekhez érkezett legalább 5 hozzászólás?
+app.get("/api/citiesWithMinComments", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT v.nev AS varos_nev, COUNT(h.id) AS hozzaszolasok_szama
+       FROM kepek k
+       JOIN varosok v ON k.varos_id = v.id
+       JOIN hozzaszolasok h ON h.kep_id = k.id
+       GROUP BY v.nev
+       HAVING COUNT(h.id) >= 5`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a városok lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Képek, amelyekhez a legtöbb hozzászólás érkezett (TOP 5)
+app.get("/api/topCommentedImages", async (req, res) => {
+  try {
+    const conn = await connectDB();
+
+    // 1. lépés: TOP 5 KÉP_ID hozzászólások szerint
+    const topResult = await conn.execute(
+      `SELECT k.KEP_ID
+       FROM kepek k
+       LEFT JOIN hozzaszolasok h ON h.KEP_ID = k.KEP_ID
+       GROUP BY k.KEP_ID
+       ORDER BY COUNT(h.HOZZASZOLAS_ID) DESC
+       FETCH FIRST 5 ROWS ONLY`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const topIds = topResult.rows.map((r) => r.KEP_ID);
+
+    if (topIds.length === 0) {
+      await conn.close();
+      return res.json([]);
+    }
+
+    // 2. lépés: teljes adat lekérdezése BLOB-bal együtt
+    const placeholders = topIds.map((_, i) => `:${i}`).join(",");
+    const fullResult = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         k.KEP,
+         k.ALBUM_ID,
+         k.HELYSZIN_VAROS_ID,
+         k.KATEGORIA_ID,
+         k.LEIRAS,
+         k.FELTOLTES_DATUM,
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV
+       FROM kepek k
+       JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       WHERE k.KEP_ID IN (${placeholders})`,
+      topIds,
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const rows = [];
+
+    for (const row of fullResult.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a top kommentelt képek lekérdezésekor:", err);
+    res.status(500).json({
+      message: "Hiba a top kommentelt képek lekérdezésekor",
+      error: err,
+    });
+  }
+});
+
+//Adott város legalább 1 hozzászólás
+app.post("/api/imagesWithCommentsFromCity", async (req, res) => {
+  try {
+    const { cityId } = req.body;
+    if (!cityId) {
+      return res.status(400).json({ message: "A városnév megadása kötelező!" });
+    }
+
+    const conn = await connectDB();
+
+    // 1. lépés: lekérjük azoknak a képeknek az ID-ját, amikhez van hozzászólás és adott városból vannak
+    const result = await conn.execute(
+      `SELECT k.KEP_ID
+       FROM kepek k
+       JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       WHERE v.VAROS_ID = :cityId
+         AND EXISTS (
+           SELECT 1 FROM hozzaszolasok h WHERE h.KEP_ID = k.KEP_ID
+         )`,
+      [cityId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const kepIds = result.rows.map((row) => row.KEP_ID);
+
+    if (kepIds.length === 0) {
+      await conn.close();
+      return res.json([]); // nincs találat
+    }
+
+    // 2. lépés: teljes képadat lekérdezése, BLOB-bal együtt
+    const bindParams = {};
+    kepIds.forEach((id, i) => {
+      bindParams[`id${i}`] = id;
+    });
+
+    const placeholders = kepIds.map((_, i) => `:id${i}`).join(",");
+
+    const fullResult = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         k.KEP,
+         k.ALBUM_ID,
+         k.HELYSZIN_VAROS_ID,
+         k.KATEGORIA_ID,
+         k.LEIRAS,
+         k.FELTOLTES_DATUM,
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV,
+         kat.NEV AS KATEGORIA_NEV
+       FROM kepek k
+       LEFT JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       LEFT JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       LEFT JOIN kategoriak kat ON k.KATEGORIA_ID = kat.KATEGORIA_ID
+       WHERE k.KEP_ID IN (${placeholders})`,
+      bindParams,
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const rows = [];
+
+    for (const row of fullResult.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a képek lekérdezésekor város alapján:", err);
+    res.status(500).json({
+      message: "Hiba a képek lekérdezésekor város alapján",
+      error: err,
+    });
+  }
+});
+
+//Felhasználók, akiknek az albumjaiban a képekre legalább 10 értékelés érkezett átlagosan
+app.get("/api/usersWithAvgRatingOver10", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT f.felhasznalonev, AVG(ertek.ertekeles) AS atlag_ertekeles
+       FROM felhasznalok f
+       JOIN albumok a ON a.felhasznalo_id = f.id
+       JOIN kepek k ON k.album_id = a.id
+       JOIN ertekelesek ertek ON ertek.kep_id = k.id
+       GROUP BY f.felhasznalonev
+       HAVING COUNT(ertek.id) >= 10`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba az értékelések lekérdezésekor:", err);
+    res.status(500).json({ message: "Lekérdezési hiba", error: err });
   }
 });
 

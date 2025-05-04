@@ -33,7 +33,7 @@ const Profil = () => {
     return (
       <div className="d-flex vh-100 custom-bg">
         <Sidebar />
-        <div className="profil shadow">
+        <div className="profil mx-auto shadow">
           Kérlek jelentkezz be{" "}
           <a href="/login">
             <span className="text-primary underline-on-hover">itt</span>
@@ -85,7 +85,7 @@ const Profil = () => {
   return (
     <div className="d-flex vh-100 custom-bg">
       <Sidebar />
-      <div className="profil shadow d-flex flex-column align-items-center py-3">
+      <div className="profil shadow mx-auto d-flex flex-column align-items-center py-3">
         <img
           src="./anonym-picture.png"
           alt="profilkép"

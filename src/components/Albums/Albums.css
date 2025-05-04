@@ -36,3 +36,8 @@
   justify-content: space-between;
   margin-top: 10px;
 }
+
+.notLoggedin {
+  height: 200px;
+  font-size: 20px;
+}
