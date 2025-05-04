@@ -148,7 +148,7 @@ const Home = () => {
   };
 
   return (
-    <div className="home-page d-flex vh-100 custom-bg">
+    <div className="home-page d-flex custom-bg">
       <Sidebar />
       <div className="content">
         <div className="home">
