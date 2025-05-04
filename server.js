@@ -1054,6 +1054,93 @@ app.get("/api/topCommentedImages", async (req, res) => {
   }
 });
 
+//Adott város legalább 1 hozzászólás
+app.post("/api/imagesWithCommentsFromCity", async (req, res) => {
+  try {
+    const { cityId } = req.body;
+    if (!cityId) {
+      return res.status(400).json({ message: "A városnév megadása kötelező!" });
+    }
+
+    const conn = await connectDB();
+
+    // 1. lépés: lekérjük azoknak a képeknek az ID-ját, amikhez van hozzászólás és adott városból vannak
+    const result = await conn.execute(
+      `SELECT k.KEP_ID
+       FROM kepek k
+       JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       WHERE v.VAROS_ID = :cityId
+         AND EXISTS (
+           SELECT 1 FROM hozzaszolasok h WHERE h.KEP_ID = k.KEP_ID
+         )`,
+      [cityId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const kepIds = result.rows.map((row) => row.KEP_ID);
+
+    if (kepIds.length === 0) {
+      await conn.close();
+      return res.json([]); // nincs találat
+    }
+
+    // 2. lépés: teljes képadat lekérdezése, BLOB-bal együtt
+    const bindParams = {};
+    kepIds.forEach((id, i) => {
+      bindParams[`id${i}`] = id;
+    });
+
+    const placeholders = kepIds.map((_, i) => `:id${i}`).join(",");
+
+    const fullResult = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         k.KEP,
+         k.ALBUM_ID,
+         k.HELYSZIN_VAROS_ID,
+         k.KATEGORIA_ID,
+         k.LEIRAS,
+         k.FELTOLTES_DATUM,
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV,
+         kat.NEV AS KATEGORIA_NEV
+       FROM kepek k
+       LEFT JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       LEFT JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       LEFT JOIN kategoriak kat ON k.KATEGORIA_ID = kat.KATEGORIA_ID
+       WHERE k.KEP_ID IN (${placeholders})`,
+      bindParams,
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const rows = [];
+
+    for (const row of fullResult.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a képek lekérdezésekor város alapján:", err);
+    res.status(500).json({
+      message: "Hiba a képek lekérdezésekor város alapján",
+      error: err,
+    });
+  }
+});
+
 //Felhasználók, akiknek az albumjaiban a képekre legalább 10 értékelés érkezett átlagosan
 app.get("/api/usersWithAvgRatingOver10", async (req, res) => {
   try {

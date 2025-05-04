@@ -80,18 +80,22 @@ function CategoryList({ images }) {
 
   return (
     <div className="tile-list">
-      {tiles.map((tile) => (
-        <Tile
-          key={tile.KEP_ID}
-          kep_id={tile.KEP_ID}
-          album_title={tile.ALBUM_NEV}
-          cim={tile.CIM}
-          varos={tile.VAROS_NEV}
-          kep={tile.KEP}
-          onEdit={handleEdit}
-          onDelete={confirmDelete}
-        />
-      ))}
+      {tiles.length === 0 ? (
+        <h2>Nincs ilyen kép</h2>
+      ) : (
+        tiles.map((tile) => (
+          <Tile
+            key={tile.KEP_ID}
+            kep_id={tile.KEP_ID}
+            album_title={tile.ALBUM_NEV}
+            cim={tile.CIM}
+            varos={tile.VAROS_NEV}
+            kep={tile.KEP}
+            onEdit={handleEdit}
+            onDelete={confirmDelete}
+          />
+        ))
+      )}
 
       {editModal && editData && (
         <div className="modal-backdrop">

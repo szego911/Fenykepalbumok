@@ -29,7 +29,7 @@ const Sidebar = () => {
         <MdCancel size={50} />
       </div>
       <nav className="menu">
-        <h3>Fényképalbumok</h3>
+        <img src="src\assets\logo.png" className="w-100" alt="" />
       </nav>
       <hr />
 
