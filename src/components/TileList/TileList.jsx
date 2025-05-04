@@ -4,7 +4,7 @@ import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
-function TileList({ refreshTrigger }) {
+function TileList({ refreshTrigger, onImageClick }) {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
@@ -15,12 +15,16 @@ function TileList({ refreshTrigger }) {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  const handleImageClick = (kep) => {
+    if (onImageClick) onImageClick(kep);
+  };
+
   useEffect(() => {
     if (tiles.length > 0) {
       setIsLoading(false);
     }
     fetchTiles();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
 
   const fetchTiles = () => {
@@ -129,6 +133,7 @@ function TileList({ refreshTrigger }) {
             kep={tile.KEP}
             onEdit={handleEdit}
             onDelete={confirmDelete}
+            onClick={() => handleImageClick(tile)}
           />
         ))
       )}

@@ -52,6 +52,40 @@ function lobToBase64(lob) {
   });
 }
 
+//Hozzászólások lekérdezése egy adott képhez
+app.get("/api/get/hozzaszolasok", async (req, res) => {
+  const kepId = req.query.kep_id;
+
+  if (!kepId) {
+    return res.status(400).json({ error: "Hiányzó kép ID (kep_id)." });
+  }
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `
+      SELECT 
+      h.HOZZASZOLAS_ID,
+      h.TARTALOM,
+      h.FELHASZNALO_ID,
+      f.FELHASZNALONEV
+      FROM HOZZASZOLASOK h
+      JOIN FELHASZNALOK f ON h.FELHASZNALO_ID = f.FELHASZNALO_ID
+      WHERE h.KEP_ID = :kepId
+
+      `,
+      [kepId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hozzászólások lekérdezési hiba:", err);
+    res.status(500).json({ error: "Szerverhiba hozzászólások lekérésekor." });
+  }
+});
+
 app.get("/api/get/:tableName", async (req, res) => {
   const { tableName } = req.params;
 
