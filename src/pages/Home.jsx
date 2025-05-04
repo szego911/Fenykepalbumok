@@ -24,6 +24,11 @@ const Home = () => {
   const [userAlbums, setUserAlbums] = useState([]);
   const { isLoggedIn, user } = useAuth();
 
+  // Új state
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [comments, setComments] = useState([]);
+
   useEffect(() => {
     fetch("http://localhost:4000/api/get/albumok")
       .then((res) => res.json())
@@ -122,6 +127,26 @@ const Home = () => {
       .catch((error) => console.error(error));
   };
 
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+
+    const kepId = image.KEP_ID || image.kep_id || image.id; // több lehetőség figyelembevétele
+    if (!kepId) {
+      console.error(
+        "Nincs érvényes kép ID a hozzászólások lekéréséhez:",
+        image
+      );
+      return;
+    }
+
+    fetch(`http://localhost:4000/api/get/hozzaszolasok?kep_id=${kepId}`)
+      .then((res) => res.json())
+      .then((data) => setComments(data))
+      .catch((err) => console.error("Hozzászólások lekérése sikertelen:", err));
+
+    setShowImageModal(true);
+  };
+
   return (
     <div className="home-page d-flex vh-100 custom-bg">
       <Sidebar />
@@ -146,7 +171,10 @@ const Home = () => {
             )}
             <h1 className="flex-grow-1 text-center m-0">Képek</h1>
           </div>
-          <TileList refreshTrigger={refreshImages} />
+          <TileList
+            refreshTrigger={refreshImages}
+            onImageClick={handleImageClick}
+          />
 
           {/* Képfeltöltés Modal */}
           {showModal && (
@@ -301,6 +329,45 @@ const Home = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Kép nagyitás és hozzászólások modal */}
+          {showImageModal && selectedImage && (
+            <div className="modal-backdrop">
+              <div className="modal-content-medium d-flex">
+                <div className="image-preview w-50 pe-3">
+                  <img
+                    src={`data:image/jpeg;base64,${selectedImage.KEP}`}
+                    alt={selectedImage.CIM}
+                    className="img-fluid"
+                  />
+                </div>
+                <div className="comment-section w-50 ps-3 overflow-auto">
+                  <h4 className="mb-3">Hozzászólások</h4>
+                  {comments.length === 0 ? (
+                    <p>Nincsenek hozzászólások.</p>
+                  ) : (
+                    comments.map((c, i) => (
+                      <div key={i} className="mb-2 p-2 border-bottom">
+                        <strong>
+                          {c.FELHASZNALONEV ||
+                            `Felhasználó #${c.FELHASZNALO_ID}`}
+                        </strong>
+                        <p className="m-0">{c.TARTALOM}</p>
+                      </div>
+                    ))
+                  )}
+                  <div className="d-flex justify-content-end mt-3">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowImageModal(false)}
+                    >
+                      Bezárás
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

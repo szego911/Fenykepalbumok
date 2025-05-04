@@ -14,6 +14,7 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
   const menuOpen = Boolean(anchorEl);
 
   const handleMenuOpen = (event) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
 
@@ -29,16 +30,24 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
           width: 280,
           position: "relative",
         }}
+        onClick={onClick}
       >
-        <CardCover onClick={onClick}>
-          <img src={`data:image/jpeg;base64,${kep}`} loading="lazy" alt="" />
+        <CardCover>
+          <img
+            src={`data:image/jpeg;base64,${kep}`}
+            loading="lazy"
+            alt={cim}
+            style={{ cursor: "pointer" }}
+          />
         </CardCover>
+
         <CardCover
           sx={{
             background:
               "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 200px), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 300px)",
           }}
         />
+
         <CardContent sx={{ justifyContent: "flex-end" }}>
           <IconButton
             aria-label="options"
@@ -58,7 +67,8 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
 
           <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
             <MenuItem
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 onEdit(kep_id);
                 handleMenuClose();
               }}
@@ -66,7 +76,8 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
               ✏️ Módosítás
             </MenuItem>
             <MenuItem
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 onDelete(kep_id);
                 handleMenuClose();
               }}
@@ -75,12 +86,10 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
             </MenuItem>
           </Menu>
 
-          {/* Kép címe */}
           <Typography level="title-lg" textColor="#fff">
             {cim}
           </Typography>
 
-          {/* Album név megjelenítése */}
           <Typography level="body-sm" textColor="#ddd">
             {album_title}
           </Typography>
