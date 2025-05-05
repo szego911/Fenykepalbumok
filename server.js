@@ -68,6 +68,7 @@ app.get("/api/get/hozzaszolasok", async (req, res) => {
       h.HOZZASZOLAS_ID,
       h.TARTALOM,
       h.FELHASZNALO_ID,
+      h.DATUM,
       f.FELHASZNALONEV
       FROM HOZZASZOLASOK h
       JOIN FELHASZNALOK f ON h.FELHASZNALO_ID = f.FELHASZNALO_ID
@@ -83,6 +84,40 @@ app.get("/api/get/hozzaszolasok", async (req, res) => {
   } catch (err) {
     console.error("Hozzászólások lekérdezési hiba:", err);
     res.status(500).json({ error: "Szerverhiba hozzászólások lekérésekor." });
+  }
+});
+
+// Értékelések lekérdezése egy adott képhez
+app.get("/api/get/ertekelesek", async (req, res) => {
+  const kepId = req.query.kep_id;
+
+  if (!kepId) {
+    return res.status(400).json({ error: "Hiányzó kép ID (kep_id)." });
+  }
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `
+      SELECT 
+        e.ERTEKELES_ID,
+        e.PONTSZAM,
+        e.ERTEKELES_DATUM,
+        e.FELHASZNALO_ID,
+        f.FELHASZNALONEV
+      FROM ERTEKELESEK e
+      JOIN FELHASZNALOK f ON e.FELHASZNALO_ID = f.FELHASZNALO_ID
+      WHERE e.KEP_ID = :kepId
+      `,
+      [kepId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Értékelések lekérdezési hiba:", err);
+    res.status(500).json({ error: "Szerverhiba értékelések lekérésekor." });
   }
 });
 

@@ -29,6 +29,8 @@ const Home = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [comments, setComments] = useState([]);
 
+  const [ratings, setRatings] = useState([]);
+
   useEffect(() => {
     fetch("http://localhost:4000/api/get/albumok")
       .then((res) => res.json())
@@ -47,6 +49,11 @@ const Home = () => {
   const handleCloseModal = () => setShowModal(false);
   const handleOpenAlbumModal = () => setShowAlbumModal(true);
   const handleCloseAlbumModal = () => setShowAlbumModal(false);
+
+  const formatDate = (rawDate) => {
+    const parsedDate = new Date(Date.parse(rawDate));
+    return isNaN(parsedDate) ? rawDate : parsedDate.toLocaleString();
+  };
 
   const handleFormFieldChange = (e) => {
     const { name, value } = e.target;
@@ -143,6 +150,12 @@ const Home = () => {
       .then((res) => res.json())
       .then((data) => setComments(data))
       .catch((err) => console.error("Hozzászólások lekérése sikertelen:", err));
+
+    // Értékelések lekérése
+    fetch(`http://localhost:4000/api/get/ertekelesek?kep_id=${kepId}`)
+      .then((res) => res.json())
+      .then((data) => setRatings(data))
+      .catch((err) => console.error("Értékelések lekérése sikertelen:", err));
 
     setShowImageModal(true);
   };
@@ -345,7 +358,7 @@ const Home = () => {
                   />
                 </div>
                 <div className="comment-section w-50 ps-3 overflow-auto">
-                  <h4 className="mb-3">Hozzászólások</h4>
+                  <h4 className="mb-3">Hozzászólások és Értékelések</h4>
                   {comments.length === 0 ? (
                     <p>Nincsenek hozzászólások.</p>
                   ) : (
@@ -354,8 +367,28 @@ const Home = () => {
                         <strong>
                           {c.FELHASZNALONEV ||
                             `Felhasználó #${c.FELHASZNALO_ID}`}
-                        </strong>
+                        </strong>{" "}
+                        <span className="text-muted">
+                          {new Date(formatDate(c.DATUM)).toLocaleString()}
+                        </span>
                         <p className="m-0">{c.TARTALOM}</p>
+                      </div>
+                    ))
+                  )}
+
+                  {ratings.length === 0 ? (
+                    <p>Még nincs értékelés.</p>
+                  ) : (
+                    ratings.map((r, i) => (
+                      <div key={i} className="mb-2 p-2 border-bottom">
+                        <strong>
+                          {r.FELHASZNALONEV ||
+                            `Felhasználó #${r.FELHASZNALO_ID}`}
+                        </strong>{" "}
+                        <span className="text-muted">
+                          {new Date(r.ERTEKELES_DATUM).toLocaleString()}
+                        </span>
+                        <p className="m-0">Pontszám: {r.PONTSZAM}/5</p>
                       </div>
                     ))
                   )}
