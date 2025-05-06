@@ -28,7 +28,6 @@ const Home = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [comments, setComments] = useState([]);
-
   const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
@@ -44,6 +43,38 @@ const Home = () => {
       })
       .catch((error) => console.error("Albumok lekérése sikertelen:", error));
   }, []);
+
+  // Lokális tároló frissítése, ha a hozzászólások és értékelések még nem léteznek
+  const fetchCommentsAndRatings = async (kepId) => {
+    // Ha már vannak az adataink a localStorage-ban, használjuk őket
+    const storedComments = localStorage.getItem(`comments-${kepId}`);
+    const storedRatings = localStorage.getItem(`ratings-${kepId}`);
+
+    if (storedComments && storedRatings) {
+      setComments(JSON.parse(storedComments));
+      setRatings(JSON.parse(storedRatings));
+      return;
+    }
+
+    // Ha még nem voltak betöltve, kérjük le őket
+    try {
+      const commentsRes = await fetch(
+        `http://localhost:4000/api/get/hozzaszolasok?kep_id=${kepId}`
+      );
+      const commentsData = await commentsRes.json();
+      setComments(commentsData);
+      localStorage.setItem(`comments-${kepId}`, JSON.stringify(commentsData));
+
+      const ratingsRes = await fetch(
+        `http://localhost:4000/api/get/ertekelesek?kep_id=${kepId}`
+      );
+      const ratingsData = await ratingsRes.json();
+      setRatings(ratingsData);
+      localStorage.setItem(`ratings-${kepId}`, JSON.stringify(ratingsData));
+    } catch (err) {
+      console.error("Hozzászólások és értékelések lekérése sikertelen:", err);
+    }
+  };
 
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
@@ -146,16 +177,8 @@ const Home = () => {
       return;
     }
 
-    fetch(`http://localhost:4000/api/get/hozzaszolasok?kep_id=${kepId}`)
-      .then((res) => res.json())
-      .then((data) => setComments(data))
-      .catch((err) => console.error("Hozzászólások lekérése sikertelen:", err));
-
-    // Értékelések lekérése
-    fetch(`http://localhost:4000/api/get/ertekelesek?kep_id=${kepId}`)
-      .then((res) => res.json())
-      .then((data) => setRatings(data))
-      .catch((err) => console.error("Értékelések lekérése sikertelen:", err));
+    // Meghívjuk a lekérést, hogy ha még nem voltak betöltve, most történjen meg
+    fetchCommentsAndRatings(kepId);
 
     setShowImageModal(true);
   };

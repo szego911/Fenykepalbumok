@@ -23,7 +23,7 @@ function Tile({ kep_id, cim, album_title, kep, onEdit, onDelete, onClick }) {
   };
 
   return (
-    <div className="tile" key={kep_id} onClick={onClick}>
+    <div className="tile" key={kep_id}>
       <Card
         sx={{
           minHeight: "250px",
