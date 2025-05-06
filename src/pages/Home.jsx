@@ -31,6 +31,8 @@ const Home = () => {
   const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
+    console.log("api hivas")
+
     fetch("http://localhost:4000/api/get/albumok")
       .then((res) => res.json())
       .then((data) => {

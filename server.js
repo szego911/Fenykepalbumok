@@ -379,6 +379,38 @@ app.delete("/api/delete/felhasznalo/:id", async (req, res) => {
   }
 });
 
+app.get("/api/users", async (req, res) => {
+  try {
+    const conn = await connectDB();
+
+    const result = await conn.execute(
+      `SELECT f.felhasznalo_id, f.felhasznalonev, f.email,
+              f.reg_datum, f.role, v.nev AS varos_nev
+       FROM felhasznalok f
+       LEFT JOIN varosok v ON f.varos_id = v.varos_id`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+
+    const users = result.rows.map(user => ({
+      id: user.FELHASZNALO_ID,
+      nev: user.FELHASZNALONEV,
+      email: user.EMAIL,
+      city: user.VAROS_NEV || "Ismeretlen",
+      reg_datum: user.REG_DATUM,
+      role: user.ROLE,
+    }));
+
+    res.status(200).json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Hiba: Nem sikerült lekérni a felhasználókat");
+  }
+});
+
+
 //KEPEK
 
 app.get("/api/allImages", async (req, res) => {

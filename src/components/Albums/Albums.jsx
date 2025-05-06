@@ -12,7 +12,7 @@ const Albums = () => {
   const [editData, setEditData] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isAdmin } = useAuth();
 
   const fetchAlbums = async () => {
     try {
@@ -138,8 +138,7 @@ const Albums = () => {
   };
 
   return (
-    <div className="d-flex vh-100 custom-bg">
-      <Sidebar />
+    <div className="d-flex vh-50  bg-white">
       <div className="albums-page">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>Albumok</h1>
@@ -156,20 +155,24 @@ const Albums = () => {
               <div key={album.ALBUM_ID} className="album-item">
                 <h3>{album.NEV}</h3>
                 <p>{album.LEIRAS}</p>
-                <div className="album-actions">
-                  <button
-                    className="btn btn-warning btn-sm"
-                    onClick={() => handleEdit(album)}
-                  >
-                    Módosítás
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(album.ALBUM_ID)}
-                  >
-                    Törlés
-                  </button>
-                </div>
+                {isAdmin ? (
+                  <div className="album-actions">
+                    <button
+                      className="btn btn-warning btn-sm"
+                      onClick={() => handleEdit(album)}
+                    >
+                      Módosítás
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDelete(album.ALBUM_ID)}
+                    >
+                      Törlés
+                    </button>
+                  </div>
+                ) : (
+                  <></>
+                )}
               </div>
             ))}
           </div>

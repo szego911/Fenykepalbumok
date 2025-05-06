@@ -43,7 +43,7 @@ const Login = () => {
           if (data.success) {
             localStorage.setItem("userData", JSON.stringify(data.user));
             alert("Sikeres bejelentkezés!");
-            navigate("/profil");
+            navigate("/home");
           } else {
             throw new Error(
               data.error || "Nem megfelelő email-cím vagy jelszó."

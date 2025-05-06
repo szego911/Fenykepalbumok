@@ -64,3 +64,8 @@
   max-height: 60vh;
   object-fit: contain;
 }
+
+.city-container {
+  padding: 50px;
+  border-radius: 16px;
+}

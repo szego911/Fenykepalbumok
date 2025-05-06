@@ -1,5 +1,4 @@
 .albums-container {
-  display: flex;
   height: 100vh;
 }
 
@@ -11,8 +10,8 @@
 
 .albums-page {
   flex: 1;
-  margin-left: 200px;
-  padding: 20px;
+  padding: 30px;
+  margin: 0 200px;
   overflow-y: auto;
 }
 

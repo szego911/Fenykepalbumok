@@ -22,9 +22,17 @@ function TileList({ refreshTrigger, onImageClick }) {
   useEffect(() => {
     if (tiles.length > 0) {
       setIsLoading(false);
+    } else {
+      fetchTiles();
+      console.log("api hivas");
     }
-    fetchTiles();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchTiles();
+    console.log("api hivas");
   }, [refreshTrigger]);
 
   const fetchTiles = () => {

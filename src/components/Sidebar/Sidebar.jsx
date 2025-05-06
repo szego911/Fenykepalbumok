@@ -42,18 +42,6 @@ const Sidebar = () => {
         >
           Főoldal
         </NavLink>
-        {isLoggedIn ? (
-          <NavLink
-            exact="true"
-            activeclassname="active"
-            className="menu-item"
-            to="/profil"
-          >
-            Profil
-          </NavLink>
-        ) : (
-          <></>
-        )}
 
         <NavLink
           exact="true"
@@ -63,14 +51,7 @@ const Sidebar = () => {
         >
           Legjobbak
         </NavLink>
-        <NavLink
-          exact="true"
-          activeclassname="active"
-          className="menu-item"
-          to="/albums"
-        >
-          Albumok
-        </NavLink>
+
         <NavLink
           exact="true"
           activeclassname="active"
@@ -80,22 +61,26 @@ const Sidebar = () => {
           Kategóriák
         </NavLink>
 
-        <NavLink
-          exact="true"
-          activeclassname="active"
-          className="menu-item"
-          to="/varosok"
-        >
-          Városok
-        </NavLink>
+        {isLoggedIn ? (
+          <NavLink
+            exact="true"
+            activeclassname="active"
+            className="menu-item"
+            to="/profil"
+          >
+            Profilom
+          </NavLink>
+        ) : (
+          <></>
+        )}
         {isAdmin ? (
           <NavLink
             exact="true"
             activeclassname="active"
             className="menu-item"
-            to="/user-admin"
+            to="/admin"
           >
-            Felhasználók
+            Admin
           </NavLink>
         ) : (
           <></>
