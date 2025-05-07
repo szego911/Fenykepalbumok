@@ -52,7 +52,7 @@ function lobToBase64(lob) {
   });
 }
 
-app.get("/api/get/:tableName", async (req, res) => {
+app.get("/api/get/tabel/:tableName", async (req, res) => {
   const { tableName } = req.params;
 
   if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
@@ -354,7 +354,14 @@ app.get("/api/allImages", async (req, res) => {
 });
 
 app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
-  const { felhasznalo_id, album_id, cim, leiras, helyszin_varos_id, kategoria_id } = req.body;
+  const {
+    felhasznalo_id,
+    album_id,
+    cim,
+    leiras,
+    helyszin_varos_id,
+    kategoria_id,
+  } = req.body;
 
   const kepPath = req.file?.path;
   if (!kepPath) {
@@ -512,72 +519,76 @@ app.put("/api/update/kep/:id", upload.single("kep"), async (req, res) => {
   }
 });
 
-app.patch("/api/updatePatch/kep/:id", upload.single("kep"), async (req, res) => {
-  const kepId = req.params.id;
-  const fields = [];
-  const values = { kep_id: kepId };
+app.patch(
+  "/api/updatePatch/kep/:id",
+  upload.single("kep"),
+  async (req, res) => {
+    const kepId = req.params.id;
+    const fields = [];
+    const values = { kep_id: kepId };
 
-  if (req.body.felhasznalo_id) {
-    fields.push("felhasznalo_id = :felhasznalo_id");
-    values.felhasznalo_id = req.body.felhasznalo_id;
-  }
-  if (req.body.album_id) {
-    fields.push("album_id = :album_id");
-    values.album_id = req.body.album_id;
-  }
-  if (req.body.cim) {
-    fields.push("cim = :cim");
-    values.cim = req.body.cim;
-  }
-  if (req.body.leiras) {
-    fields.push("leiras = :leiras");
-    values.leiras = req.body.leiras;
-  }
-  if (req.body.feltoltes_datum) {
-    fields.push("feltoltes_datum = TO_DATE(:feltoltes_datum, 'YYYY-MM-DD')");
-    values.feltoltes_datum = req.body.feltoltes_datum;
-  }
-  if (req.body.helyszin_varos_id) {
-    fields.push("helyszin_varos_id = :helyszin_varos_id");
-    values.helyszin_varos_id = req.body.helyszin_varos_id;
-  }
-  if (req.body.kategoria_id) {
-    fields.push("kategoria_id = :kategoria_id");
-    values.kategoria_id = req.body.kategoria_id;
-  }
-
-  if (req.file) {
-    const kepBuffer = fs.readFileSync(req.file.path);
-    fields.push("kep = :kep");
-    values.kep = kepBuffer;
-    fs.unlinkSync(req.file.path);
-  }
-
-  if (fields.length === 0) {
-    return res.status(400).json({ error: "❌ Nincs frissítendő mező" });
-  }
-
-  const sql = `UPDATE kepek SET ${fields.join(", ")} WHERE kep_id = :kep_id`;
-
-  let conn;
-  try {
-    conn = await connectDB();
-    const result = await conn.execute(sql, values, { autoCommit: true });
-
-    if (result.rowsAffected === 0) {
-      return res
-        .status(404)
-        .json({ error: "❌ Nincs ilyen kép azonosítóval" });
+    if (req.body.felhasznalo_id) {
+      fields.push("felhasznalo_id = :felhasznalo_id");
+      values.felhasznalo_id = req.body.felhasznalo_id;
+    }
+    if (req.body.album_id) {
+      fields.push("album_id = :album_id");
+      values.album_id = req.body.album_id;
+    }
+    if (req.body.cim) {
+      fields.push("cim = :cim");
+      values.cim = req.body.cim;
+    }
+    if (req.body.leiras) {
+      fields.push("leiras = :leiras");
+      values.leiras = req.body.leiras;
+    }
+    if (req.body.feltoltes_datum) {
+      fields.push("feltoltes_datum = TO_DATE(:feltoltes_datum, 'YYYY-MM-DD')");
+      values.feltoltes_datum = req.body.feltoltes_datum;
+    }
+    if (req.body.helyszin_varos_id) {
+      fields.push("helyszin_varos_id = :helyszin_varos_id");
+      values.helyszin_varos_id = req.body.helyszin_varos_id;
+    }
+    if (req.body.kategoria_id) {
+      fields.push("kategoria_id = :kategoria_id");
+      values.kategoria_id = req.body.kategoria_id;
     }
 
-    res.json({ message: "✅ Kép sikeresen frissítve", success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "❌ Hiba a frissítés során" });
-  } finally {
-    if (conn) await conn.close();
+    if (req.file) {
+      const kepBuffer = fs.readFileSync(req.file.path);
+      fields.push("kep = :kep");
+      values.kep = kepBuffer;
+      fs.unlinkSync(req.file.path);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "❌ Nincs frissítendő mező" });
+    }
+
+    const sql = `UPDATE kepek SET ${fields.join(", ")} WHERE kep_id = :kep_id`;
+
+    let conn;
+    try {
+      conn = await connectDB();
+      const result = await conn.execute(sql, values, { autoCommit: true });
+
+      if (result.rowsAffected === 0) {
+        return res
+          .status(404)
+          .json({ error: "❌ Nincs ilyen kép azonosítóval" });
+      }
+
+      res.json({ message: "✅ Kép sikeresen frissítve", success: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "❌ Hiba a frissítés során" });
+    } finally {
+      if (conn) await conn.close();
+    }
   }
-});
+);
 
 //ALBUMOK
 
@@ -726,7 +737,6 @@ app.get("/api/get/albumok", async (req, res) => {
     res.status(500).json({ error: "Hiba a albumok lekérésekor" });
   }
 });
-
 
 //ÉRTÉKELÉSEK
 
@@ -956,12 +966,18 @@ app.patch("/api/update/varos/:id", async (req, res) => {
 app.get("/api/get/categories", async (req, res) => {
   try {
     const conn = await connectDB();
-    const result = await conn.execute("SELECT * FROM kategoriak");
+    const result = await conn.execute(
+      `SELECT kategoria_id, nev FROM kategoriak`,
+      [],
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      }
+    );
     await conn.close();
-    res.json(result.rows);
+    res.status(200).json(result.rows);
   } catch (err) {
-    console.error("Hiba a kategóriák lekérésekor:", err);
-    res.status(500).json({ error: "Hiba a kategóriák lekérésekor" });
+    console.error(err);
+    res.status(500).send("Hiba a kategóriák lekérésekor");
   }
 });
 
@@ -972,8 +988,9 @@ app.get("/api/imagesByCategory/:kategoria_id", async (req, res) => {
     const conn = await connectDB();
     const result = await conn.execute(
       `SELECT 
-         k.kep_id, k.cim, k.leiras, k.feltoltes_datum, k.kategoria_id, 
-         a.nev AS album_nev, v.nev AS varos_nev
+         k.*, 
+         a.nev AS album_nev, 
+         v.nev AS varos_nev
        FROM kepek k
        LEFT JOIN albumok a ON k.album_id = a.album_id
        LEFT JOIN varosok v ON k.helyszin_varos_id = v.varos_id
@@ -982,8 +999,24 @@ app.get("/api/imagesByCategory/:kategoria_id", async (req, res) => {
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
+    const rows = [];
+
+    for (const row of result.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás base64-re (pl. képek)
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
     await conn.close();
-    res.json(result.rows);
+    res.json(rows);
   } catch (err) {
     console.error("Hiba a képek lekérdezésekor kategória alapján:", err);
     res.status(500).json({ error: "Hiba a képek lekérdezésekor" });

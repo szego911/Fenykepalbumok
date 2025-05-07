@@ -15,6 +15,7 @@ function TileList({ refreshTrigger }) {
   const [editData, setEditData] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [error, setError] = useState(null);
 
   // Képek betöltése
   useEffect(() => {
@@ -49,9 +50,14 @@ function TileList({ refreshTrigger }) {
       })
       .catch((error) => {
         console.error("Server error:", error);
+        setError(error);
         setIsLoading(false);
       });
   };
+
+  if (error) {
+    return <div className="text-red">Hiba az adatbázis kapcsolattal!</div>;
+  }
 
   const executeDelete = () => {
     if (!deleteId) return;

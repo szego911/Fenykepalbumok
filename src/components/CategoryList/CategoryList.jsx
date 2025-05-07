@@ -4,13 +4,13 @@ import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
-function CategoryList({ refreshTrigger }) {
+function CategoryList() {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
   });
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("1");
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -34,20 +34,15 @@ function CategoryList({ refreshTrigger }) {
   // Képek betöltése
   useEffect(() => {
     fetchTiles();
-  }, [refreshTrigger, selectedCategory]);
+  }, [selectedCategory]);
 
   const fetchTiles = () => {
     setIsLoading(true);
-    const url = selectedCategory
-      ? `http://localhost:4000/api/imagesByCategory/${selectedCategory}`
-      : "http://localhost:4000/api/allImages";
 
-    fetch(url)
+    fetch("http://localhost:4000/api/imagesByCategory/" + selectedCategory)
       .then((response) => response.json())
       .then((result) => {
         setTiles(result);
-        localStorage.removeItem("images");
-        localStorage.setItem("images", JSON.stringify(result));
         setIsLoading(false);
       })
       .catch((error) => {
@@ -126,7 +121,7 @@ function CategoryList({ refreshTrigger }) {
   };
 
   return (
-    <>
+    <div>
       {/* Kategóriák lenyíló lista */}
       <div className="form-group mb-4">
         <label className="form-label text-start w-100 fs-5 text">
@@ -136,7 +131,6 @@ function CategoryList({ refreshTrigger }) {
             value={selectedCategory}
             onChange={handleCategoryChange}
           >
-            <option value="">-- Kategória kiválasztása --</option>
             {categories.map((category) => (
               <option key={category.KATEGORIA_ID} value={category.KATEGORIA_ID}>
                 {category.NEV}
@@ -176,7 +170,9 @@ function CategoryList({ refreshTrigger }) {
             />
           ))}
         </div>
-      ) : null}
+      ) : (
+        <p>Nincs elérhető kép ebben a kategóriában.</p>
+      )}
 
       {/* Módosítási modal */}
       {editModal && editData && (
@@ -304,7 +300,7 @@ function CategoryList({ refreshTrigger }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
