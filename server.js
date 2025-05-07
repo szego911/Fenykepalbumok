@@ -688,8 +688,9 @@ app.post("/api/create/album", async (req, res) => {
     const conn = await connectDB();
 
     await conn.execute(
-      `INSERT INTO albumok (felhasznalo_id, nev, leiras, letrehozas_datum)
-       VALUES (:felhasznalo_id, :nev, :leiras, SYSDATE)`,
+      `BEGIN
+         uj_album_letrehozas(:felhasznalo_id, :nev, :leiras);
+       END;`,
       { felhasznalo_id, nev, leiras },
       { autoCommit: true }
     );
@@ -825,8 +826,9 @@ app.post("/api/create/hozzaszolas", async (req, res) => {
     const conn = await connectDB();
 
     await conn.execute(
-      `INSERT INTO hozzaszolasok (kep_id, felhasznalo_id, tartalom, datum)
-       VALUES (:kep_id, :felhasznalo_id, :tartalom, SYSDATE)`,
+      `BEGIN
+         hozzaszolas_hozzaadasa(:kep_id, :felhasznalo_id, :tartalom);
+       END;`,
       { kep_id, felhasznalo_id, tartalom },
       { autoCommit: true }
     );
