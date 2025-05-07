@@ -1128,29 +1128,6 @@ app.get("/api/imagesByCategory/:kategoria_id", async (req, res) => {
 
 //Összetett lekérdezések
 
-//Mely városokban készült képekhez érkezett legalább 5 hozzászólás?
-app.get("/api/citiesWithMinComments", async (req, res) => {
-  try {
-    const conn = await connectDB();
-    const result = await conn.execute(
-      `SELECT v.nev AS varos_nev, COUNT(h.id) AS hozzaszolasok_szama
-       FROM kepek k
-       JOIN varosok v ON k.varos_id = v.id
-       JOIN hozzaszolasok h ON h.kep_id = k.id
-       GROUP BY v.nev
-       HAVING COUNT(h.id) >= 5`,
-      [],
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
-
-    await conn.close();
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Hiba a városok lekérdezésekor:", err);
-    res.status(500).json({ message: "Lekérdezési hiba", error: err });
-  }
-});
-
 //Képek, amelyekhez a legtöbb hozzászólás érkezett (TOP 5)
 app.get("/api/topCommentedImages", async (req, res) => {
   try {
@@ -1241,8 +1218,7 @@ app.post("/api/imagesWithCommentsFromCity", async (req, res) => {
        JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
        WHERE v.VAROS_ID = :cityId
          AND EXISTS (
-           SELECT 1 FROM hozzaszolasok h WHERE h.KEP_ID = k.KEP_ID
-         )`,
+           SELECT 1 FROM hozzaszolasok h WHERE h.KEP_ID = k.KEP_ID)`,
       [cityId],
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
@@ -1312,17 +1288,17 @@ app.post("/api/imagesWithCommentsFromCity", async (req, res) => {
 });
 
 //Felhasználók, akiknek az albumjaiban a képekre legalább 10 értékelés érkezett átlagosan
-app.get("/api/usersWithAvgRatingOver10", async (req, res) => {
+app.get("/api/usersWithAvgRatingOver2", async (req, res) => {
   try {
     const conn = await connectDB();
     const result = await conn.execute(
-      `SELECT f.felhasznalonev, AVG(ertek.ertekeles) AS atlag_ertekeles
+      `SELECT f.felhasznalonev, AVG(ertek.pontszam) AS atlag_ertekeles
        FROM felhasznalok f
-       JOIN albumok a ON a.felhasznalo_id = f.id
-       JOIN kepek k ON k.album_id = a.id
-       JOIN ertekelesek ertek ON ertek.kep_id = k.id
+       JOIN albumok a ON a.felhasznalo_id = f.felhasznalo_id
+       JOIN kepek k ON k.album_id = a.album_id
+       JOIN ertekelesek ertek ON ertek.kep_id = k.kep_id
        GROUP BY f.felhasznalonev
-       HAVING COUNT(ertek.id) >= 10`,
+       HAVING COUNT(ertek.kep_id) >= 2`,
       [],
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
@@ -1335,64 +1311,83 @@ app.get("/api/usersWithAvgRatingOver10", async (req, res) => {
   }
 });
 
+//Mely városokban készült képekhez érkezett legalább 5 hozzászólás?
+app.get("/api/citiesWithMinCommentsImages", async (req, res) => {
+  try {
+    const conn = await connectDB();
+
+    // 1. lépés: lekérdezzük a megfelelő város ID-kat
+    const cityResult = await conn.execute(
+      `SELECT k.HELYSZIN_VAROS_ID AS VAROS_ID
+       FROM kepek k
+       JOIN hozzaszolasok h ON h.KEP_ID = k.KEP_ID
+       GROUP BY k.HELYSZIN_VAROS_ID
+       HAVING COUNT(h.HOZZASZOLAS_ID) >= 5`, // VAGY h.ID, ha úgy hívják!
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const varosIds = cityResult.rows.map((r) => r.VAROS_ID);
+    console.log("Város ID-k (min. 5 komment):", varosIds);
+
+    if (varosIds.length === 0) {
+      await conn.close();
+      return res.json([]);
+    }
+
+    // 2. lépés: képek lekérdezése ezekből a városokból
+    const bindParams = {};
+    varosIds.forEach((id, i) => {
+      bindParams[`id${i}`] = id;
+    });
+    const placeholders = varosIds.map((_, i) => `:id${i}`).join(",");
+
+    const imageResult = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         k.KEP,
+         k.ALBUM_ID,
+         k.HELYSZIN_VAROS_ID,
+         k.KATEGORIA_ID,
+         k.LEIRAS,
+         k.FELTOLTES_DATUM,
+         a.NEV AS ALBUM_NEV,
+         v.NEV AS VAROS_NEV
+       FROM kepek k
+       LEFT JOIN albumok a ON k.ALBUM_ID = a.ALBUM_ID
+       LEFT JOIN varosok v ON k.HELYSZIN_VAROS_ID = v.VAROS_ID
+       WHERE k.HELYSZIN_VAROS_ID IN (${placeholders})`,
+      bindParams,
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const rows = [];
+
+    for (const row of imageResult.rows) {
+      const newRow = { ...row };
+
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
+    await conn.close();
+    res.json(rows);
+  } catch (err) {
+    console.error("Hiba a város képeinek lekérdezésekor:", err);
+    res.status(500).json({
+      message: "Hiba a város képeinek lekérdezésekor",
+      error: err,
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("✅ API fut: http://localhost:4000");
 });
-
-// Login api fetch in code:
-/*
-const raw = JSON.stringify({
-  "email": "hash@admin.com" vagy egy változó, amit a felhasználó beír,
-  "password": "admin123" vagy egy változó, amit a felhasználó beír
-});
-
-const requestOptions = {
-  method: "POST",
-  headers: {"Content-Type": "application/json"},
-  body: raw,
-  redirect: "follow"
-};
-
-fetch("http://localhost:4000/api/login", requestOptions)
-  .then((response) => response.text())
-  .then((result) => console.log(result))
-  .catch((error) => console.error(error)); 
-  
-// Register api fetch in code:
-
-const raw = JSON.stringify({
-  "userName": "testUser", vagy változók
-  "email": "user@test.com",
-  "password": "user123",
-  "cityId": "2"
-});
-
-const requestOptions = {
-  method: "POST",
-  headers: {"Content-Type": "application/json"},
-  body: raw,
-  redirect: "follow"
-};
-
-fetch("http://localhost:4000/api/register", requestOptions)
-  .then((response) => response.text())
-  .then((result) => console.log(result))
-  .catch((error) => console.error(error));  */
-
-//auto increasment for id-s
-/*
-CREATE SEQUENCE felhasznalo_seq
-  START WITH 8
-  INCREMENT BY 1
-  NOCACHE
-  NOCYCLE;
-
-CREATE OR REPLACE TRIGGER felhasznalo_id_trigger
-BEFORE INSERT ON felhasznalok
-FOR EACH ROW
-WHEN (NEW.felhasznalo_id IS NULL)
-BEGIN
-  SELECT felhasznalo_seq.NEXTVAL
-  INTO :NEW.felhasznalo_id
-  FROM dual;
-END;*/

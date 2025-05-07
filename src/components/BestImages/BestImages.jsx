@@ -4,6 +4,7 @@ import Sidebar from "../Sidebar/Sidebar";
 import CustomList from "./CustomList";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import { BiSolidCommentError } from "react-icons/bi";
 
 const BestImages = () => {
   const [bestImages, setBestImages] = useState(() => {
@@ -18,6 +19,13 @@ const BestImages = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLoading2, setIsLoading2] = useState(true);
+
+  const [users, setUsers] = useState(() => {
+    const stored = localStorage.getItem("users");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [loading3, setLoading3] = useState(true);
+  const [error, setError] = useState(null);
 
   const [cities, setCities] = useState([]);
 
@@ -35,8 +43,12 @@ const BestImages = () => {
     if (cityImages.length > 0) {
       setIsLoading2(false);
     }
-    fetchBestImages();
+    if (users.length > 0) {
+      setLoading3(false);
+    }
+    //fetchBestImages();
     fetchCityImages(selectedCityId);
+    fetchTopUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -74,11 +86,30 @@ const BestImages = () => {
       });
   };
 
+  const fetchTopUser = () => {
+    fetch("http://localhost:4000/api/usersWithAvgRatingOver2")
+      .then((res) => res.json())
+      .then((data) => {
+        setUsers(data);
+        localStorage.removeItem("users");
+        localStorage.setItem("users", JSON.stringify(data));
+        setLoading3(false);
+      })
+      .catch((err) => {
+        console.error("Hiba a felhasználók lekérdezésekor:", err);
+        setError(err);
+        setLoading3(false);
+      });
+  };
+
+  if (error) {
+    return <div>Hiba : {error}</div>;
+  }
+
   const refreshCity = (e) => {
     const { value } = e.target;
     setIsLoading2(true);
     localStorage.removeItem("cityImages");
-    console.log(value);
     setSelectedCityId(value);
     fetchCityImages(value);
   };
@@ -150,6 +181,23 @@ const BestImages = () => {
               </Box>
             ) : (
               <CustomList images={cityImages} />
+            )}
+          </div>
+          <div className="rating-users p-3">
+            <h2>2 feletti értékelésű felhasználók</h2>
+            {loading3 ? (
+              <p>Betöltés...</p>
+            ) : users.length === 0 ? (
+              <p>Nincs találat.</p>
+            ) : (
+              <ul>
+                {users.map((user, index) => (
+                  <li key={index}>
+                    <strong>{user.FELHASZNALONEV}</strong>:{" "}
+                    {user.ATLAG_ERTEKELES}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
