@@ -12,8 +12,10 @@ const Home = () => {
     file: null,
     description: "",
     location: "",
+    kategoria_id: "",
   });
   const [refreshImages, setRefreshImages] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [albumData, setAlbumData] = useState({
@@ -36,6 +38,20 @@ const Home = () => {
         }
       })
       .catch((error) => console.error("Albumok lekérése sikertelen:", error));
+  }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:4000/api/get/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error("Invalid data format", data);
+          setCategories([]);
+        }
+      })
+      .catch((error) => console.error("Kategóriák lekérése sikertelen:", error));
   }, []);
 
   const handleOpenModal = () => setShowModal(true);
@@ -86,6 +102,7 @@ const Home = () => {
     formdata.append("cim", formData.title);
     formdata.append("leiras", formData.description);
     formdata.append("helyszin_varos_id", formData.location);
+    formdata.append("kategoria_id", formData.kategoria_id);
     formdata.append("kep", formData.file);
 
     const requestOptions = {
@@ -201,6 +218,28 @@ const Home = () => {
                             value={album.ALBUM_ID}
                           >
                             {album.NEV || "Névtelen album"}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label text-start w-100 fs-5 text">
+                      Kategória:
+                      <select
+                        name="kategoria_id"
+                        value={formData.kategoria_id}
+                        onChange={handleFormFieldChange}
+                        className="form-control"
+                        required
+                      >
+                        <option value="" disabled hidden>
+                          Válassz kategóriát
+                        </option>
+                        {categories.map((category) => (
+                          <option key={category.KATEGORIA_ID} value={category.KATEGORIA_ID}>
+                            {category.NEV}
                           </option>
                         ))}
                       </select>

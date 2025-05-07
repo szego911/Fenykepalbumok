@@ -9,19 +9,34 @@ function TileList({ refreshTrigger }) {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
   });
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  // Képek betöltése
   useEffect(() => {
     if (tiles.length > 0) {
       setIsLoading(false);
     }
     fetchTiles();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
+
+  // Kategóriák betöltése
+  useEffect(() => {
+    fetch("http://localhost:4000/api/get/categories")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error("Invalid data format", data);
+        }
+      })
+      .catch((error) => console.error("Hiba a kategóriák lekérésekor:", error));
+  }, []);
 
   const fetchTiles = () => {
     fetch("http://localhost:4000/api/allImages")
@@ -80,6 +95,7 @@ function TileList({ refreshTrigger }) {
     formData.append("cim", editData.CIM);
     formData.append("leiras", editData.LEIRAS);
     formData.append("helyszin_varos_id", editData.HELYSZIN_VAROS_ID);
+    formData.append("kategoria_id", editData.KATEGORIA_ID); // Kategória hozzáadása
     if (editData.KEP) {
       formData.append("kep", editData.KEP);
     }
@@ -171,6 +187,32 @@ function TileList({ refreshTrigger }) {
                     maxLength={150}
                     required
                   />
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label text-start w-100 fs-5 text">
+                  Kategória
+                  <select
+                    className="form-control"
+                    value={editData.KATEGORIA_ID || ""}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        KATEGORIA_ID: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">-- Kategória kiválasztása --</option>
+                    {categories.map((category) => (
+                      <option
+                        key={category.KATEGORIA_ID}
+                        value={category.KATEGORIA_ID}
+                      >
+                        {category.NEV}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 
