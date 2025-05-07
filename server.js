@@ -121,7 +121,7 @@ app.get("/api/get/ertekelesek", async (req, res) => {
   }
 });
 
-app.get("/api/get/:tableName", async (req, res) => {
+app.get("/api/get/tabel/:tableName", async (req, res) => {
   const { tableName } = req.params;
 
   if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
@@ -455,7 +455,14 @@ app.get("/api/allImages", async (req, res) => {
 });
 
 app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
-  const { felhasznalo_id, album_id, cim, leiras, helyszin_varos_id } = req.body;
+  const {
+    felhasznalo_id,
+    album_id,
+    cim,
+    leiras,
+    helyszin_varos_id,
+    kategoria_id,
+  } = req.body;
 
   const kepPath = req.file?.path;
   if (!kepPath) {
@@ -470,15 +477,16 @@ app.post("/api/upload/image", upload.single("kep"), async (req, res) => {
 
     await conn.execute(
       `INSERT INTO kepek 
-        (felhasznalo_id, album_id, cim, leiras, feltoltes_datum, helyszin_varos_id, kep) 
+        (felhasznalo_id, album_id, cim, leiras, feltoltes_datum, helyszin_varos_id, kategoria_id, kep) 
        VALUES 
-        (:felhasznalo_id, :album_id, :cim, :leiras, SYSDATE, :helyszin_varos_id, :kep)`,
+        (:felhasznalo_id, :album_id, :cim, :leiras, SYSDATE, :helyszin_varos_id, :kategoria_id, :kep)`,
       {
         felhasznalo_id,
         album_id,
         cim,
         leiras,
         helyszin_varos_id,
+        kategoria_id: kategoria_id || null,
         kep: kepBuffer,
       },
       { autoCommit: true }
@@ -643,6 +651,10 @@ app.patch(
     if (req.body.helyszin_varos_id) {
       fields.push("helyszin_varos_id = :helyszin_varos_id");
       values.helyszin_varos_id = req.body.helyszin_varos_id;
+    }
+    if (req.body.kategoria_id) {
+      fields.push("kategoria_id = :kategoria_id");
+      values.kategoria_id = req.body.kategoria_id;
     }
 
     if (req.file) {
@@ -812,6 +824,18 @@ app.get("/api/get/albumok/:felhasznalo_id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Hiba történt az albumok lekérdezésekor" });
+  }
+});
+
+app.get("/api/get/albumok", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute("SELECT * FROM albumok");
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a albumok lekérésekor:", err);
+    res.status(500).json({ error: "Hiba a albumok lekérésekor" });
   }
 });
 
@@ -1040,20 +1064,63 @@ app.patch("/api/update/varos/:id", async (req, res) => {
 
 //KATEGORIAK
 
-app.get("/api/kategoriak", async (req, res) => {
+app.get("/api/get/categories", async (req, res) => {
   try {
     const conn = await connectDB();
     const result = await conn.execute(
       `SELECT kategoria_id, nev FROM kategoriak`,
       [],
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+      }
+    );
+    await conn.close();
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Hiba a kategóriák lekérésekor");
+  }
+});
+
+app.get("/api/imagesByCategory/:kategoria_id", async (req, res) => {
+  const kategoria_id = req.params.kategoria_id;
+
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT 
+         k.*, 
+         a.nev AS album_nev, 
+         v.nev AS varos_nev
+       FROM kepek k
+       LEFT JOIN albumok a ON k.album_id = a.album_id
+       LEFT JOIN varosok v ON k.helyszin_varos_id = v.varos_id
+       WHERE k.kategoria_id = :kategoria_id`,
+      { kategoria_id },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
+    const rows = [];
+
+    for (const row of result.rows) {
+      const newRow = { ...row };
+
+      // BLOB konvertálás base64-re (pl. képek)
+      for (const key of Object.keys(newRow)) {
+        const val = newRow[key];
+        if (val && typeof val === "object" && typeof val.on === "function") {
+          newRow[key] = await lobToBase64(val);
+        }
+      }
+
+      rows.push(newRow);
+    }
+
     await conn.close();
-    res.json(result.rows);
+    res.json(rows);
   } catch (err) {
-    console.error("Hiba a kategóriák lekérdezésekor:", err);
-    res.status(500).json({ message: "Lekérdezési hiba", error: err });
+    console.error("Hiba a képek lekérdezésekor kategória alapján:", err);
+    res.status(500).json({ error: "Hiba a képek lekérdezésekor" });
   }
 });
 

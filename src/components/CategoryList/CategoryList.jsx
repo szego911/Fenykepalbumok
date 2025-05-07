@@ -4,37 +4,55 @@ import Tile from "../Tile/Tile";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
-function CategoryList({ refreshTrigger }) {
+function CategoryList() {
   const [tiles, setTiles] = useState(() => {
     const stored = localStorage.getItem("images");
     return stored ? JSON.parse(stored) : [];
   });
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("1");
   const [isLoading, setIsLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  // Kategóriák betöltése
   useEffect(() => {
-    if (tiles.length > 0) {
-      setIsLoading(false);
-    }
+    fetch("http://localhost:4000/api/get/categories")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error("Invalid data format", data);
+        }
+      })
+      .catch((error) => console.error("Hiba a kategóriák lekérésekor:", error));
+  }, []);
+
+  // Képek betöltése
+  useEffect(() => {
     fetchTiles();
-  }, [refreshTrigger]);
+  }, [selectedCategory]);
 
   const fetchTiles = () => {
-    fetch("http://localhost:4000/api/allImages")
+    setIsLoading(true);
+
+    fetch("http://localhost:4000/api/imagesByCategory/" + selectedCategory)
       .then((response) => response.json())
       .then((result) => {
         setTiles(result);
-        localStorage.removeItem("images");
-        localStorage.setItem("images", JSON.stringify(result));
         setIsLoading(false);
       })
       .catch((error) => {
         console.error("Server error:", error);
         setIsLoading(false);
       });
+  };
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
   };
 
   const executeDelete = () => {
@@ -79,6 +97,7 @@ function CategoryList({ refreshTrigger }) {
     formData.append("cim", editData.CIM);
     formData.append("leiras", editData.LEIRAS);
     formData.append("helyszin_varos_id", editData.HELYSZIN_VAROS_ID);
+    formData.append("kategoria_id", editData.KATEGORIA_ID);
     if (editData.KEP) {
       formData.append("kep", editData.KEP);
     }
@@ -102,7 +121,26 @@ function CategoryList({ refreshTrigger }) {
   };
 
   return (
-    <div className="tile-list">
+    <div>
+      {/* Kategóriák lenyíló lista */}
+      <div className="form-group mb-4">
+        <label className="form-label text-start w-100 fs-5 text">
+          Válassz kategóriát:
+          <select
+            className="form-control"
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+          >
+            {categories.map((category) => (
+              <option key={category.KATEGORIA_ID} value={category.KATEGORIA_ID}>
+                {category.NEV}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Betöltés */}
       {isLoading ? (
         <Box
           sx={{
@@ -117,21 +155,26 @@ function CategoryList({ refreshTrigger }) {
           <CircularProgress />
           <p>Betöltés...</p>
         </Box>
+      ) : tiles.length > 0 ? (
+        <div className="tile-list">
+          {tiles.map((tile) => (
+            <Tile
+              key={tile.KEP_ID}
+              kep_id={tile.KEP_ID}
+              album_title={tile.ALBUM_NEV}
+              cim={tile.CIM}
+              varos={tile.VAROS_NEV}
+              kep={tile.KEP}
+              onEdit={handleEdit}
+              onDelete={confirmDelete}
+            />
+          ))}
+        </div>
       ) : (
-        tiles.map((tile) => (
-          <Tile
-            key={tile.KEP_ID}
-            kep_id={tile.KEP_ID}
-            album_title={tile.ALBUM_NEV}
-            cim={tile.CIM}
-            varos={tile.VAROS_NEV}
-            kep={tile.KEP}
-            onEdit={handleEdit}
-            onDelete={confirmDelete}
-          />
-        ))
+        <p>Nincs elérhető kép ebben a kategóriában.</p>
       )}
 
+      {/* Módosítási modal */}
       {editModal && editData && (
         <div className="modal-backdrop">
           <div className="modal-content-small">
@@ -175,6 +218,32 @@ function CategoryList({ refreshTrigger }) {
 
               <div className="form-group">
                 <label className="form-label text-start w-100 fs-5 text">
+                  Kategória
+                  <select
+                    className="form-control"
+                    value={editData.KATEGORIA_ID || ""}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        KATEGORIA_ID: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">-- Kategória kiválasztása --</option>
+                    {categories.map((category) => (
+                      <option
+                        key={category.KATEGORIA_ID}
+                        value={category.KATEGORIA_ID}
+                      >
+                        {category.NEV}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label text-start w-100 fs-5 text">
                   Új kép feltöltése (nem kötelező)
                   <input
                     type="file"
@@ -206,6 +275,8 @@ function CategoryList({ refreshTrigger }) {
           </div>
         </div>
       )}
+
+      {/* Törlési modal */}
       {deleteModal && (
         <div className="modal-backdrop">
           <div className="modal-content-small">
