@@ -1,6 +1,36 @@
 --------------------------------------------------------
---  File created - szerda-március-26-2025   
+--  File created - csütörtök-május-15-2025   
 --------------------------------------------------------
+--------------------------------------------------------
+--  DDL for Sequence ALBUM_ID_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "ALBUM_ID_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 166 CACHE 20 NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+--------------------------------------------------------
+--  DDL for Sequence FELHASZNALO_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "FELHASZNALO_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 25 NOCACHE  NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+--------------------------------------------------------
+--  DDL for Sequence HOZZASZOLAS_ID_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "HOZZASZOLAS_ID_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 8 NOCACHE  NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+--------------------------------------------------------
+--  DDL for Sequence KEP_ID_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "KEP_ID_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 33 NOCACHE  NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+--------------------------------------------------------
+--  DDL for Sequence KEP_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "KEP_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 6 NOCACHE  NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+--------------------------------------------------------
+--  DDL for Sequence VAROS_ID_SEQ
+--------------------------------------------------------
+
+   CREATE SEQUENCE  "VAROS_ID_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 22 NOCACHE  NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
 --------------------------------------------------------
 --  DDL for Table ALBUMOK
 --------------------------------------------------------
@@ -54,6 +84,7 @@
   GRANT QUERY REWRITE ON "ALBUMOK" TO PUBLIC WITH GRANT OPTION;
   GRANT DEBUG ON "ALBUMOK" TO PUBLIC WITH GRANT OPTION;
   GRANT FLASHBACK ON "ALBUMOK" TO PUBLIC WITH GRANT OPTION;
+
 --------------------------------------------------------
 --  DDL for Table ERTEKELESEK
 --------------------------------------------------------
@@ -117,7 +148,8 @@
 	"EMAIL" VARCHAR2(100 BYTE), 
 	"JELSZO_HASH" VARCHAR2(255 BYTE), 
 	"VAROS_ID" NUMBER(*,0), 
-	"REG_DATUM" DATE
+	"REG_DATUM" DATE, 
+	"ROLE" VARCHAR2(10 BYTE) DEFAULT 'user'
    ) SEGMENT CREATION IMMEDIATE 
   PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
  NOCOMPRESS LOGGING
@@ -275,14 +307,22 @@
 	"CIM" VARCHAR2(100 BYTE), 
 	"LEIRAS" VARCHAR2(150 BYTE), 
 	"FELTOLTES_DATUM" DATE, 
-	"HELYSZIN_VAROS_ID" NUMBER(*,0)
+	"HELYSZIN_VAROS_ID" NUMBER(*,0), 
+	"KEP" BLOB, 
+	"KATEGORIA_ID" NUMBER
    ) SEGMENT CREATION IMMEDIATE 
   PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
  NOCOMPRESS LOGGING
   STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
   PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1
   BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
-  TABLESPACE "USERS" ;
+  TABLESPACE "USERS" 
+ LOB ("KEP") STORE AS SECUREFILE (
+  TABLESPACE "USERS" ENABLE STORAGE IN ROW CHUNK 8192
+  NOCACHE LOGGING  NOCOMPRESS  KEEP_DUPLICATES 
+  STORAGE(INITIAL 106496 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
+  PCTINCREASE 0
+  BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)) ;
   GRANT ALTER ON "KEPEK" TO "C##WUW4PA" WITH GRANT OPTION;
   GRANT DELETE ON "KEPEK" TO "C##WUW4PA" WITH GRANT OPTION;
   GRANT INDEX ON "KEPEK" TO "C##WUW4PA" WITH GRANT OPTION;
@@ -319,6 +359,7 @@
   GRANT QUERY REWRITE ON "KEPEK" TO PUBLIC WITH GRANT OPTION;
   GRANT DEBUG ON "KEPEK" TO PUBLIC WITH GRANT OPTION;
   GRANT FLASHBACK ON "KEPEK" TO PUBLIC WITH GRANT OPTION;
+
 --------------------------------------------------------
 --  DDL for Table VAROSOK
 --------------------------------------------------------
@@ -371,68 +412,89 @@
   GRANT QUERY REWRITE ON "VAROSOK" TO PUBLIC WITH GRANT OPTION;
   GRANT DEBUG ON "VAROSOK" TO PUBLIC WITH GRANT OPTION;
   GRANT FLASHBACK ON "VAROSOK" TO PUBLIC WITH GRANT OPTION;
-REM INSERTING into ALBUMOK
+
+REM INSERTING into C##X8TRB2.ALBUMOK
 SET DEFINE OFF;
-Insert into ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('1','1','Olaszország 2021','Olaszországi nyaralásom 2021-ben',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('2','1','Család','Családról készült képek',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('3','3','Foltos','Foltosról készült képek',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('4','6','Töri TZ','Történelem témazáróhoz képek',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('5','2','Barcelona 2015','2015-ös Barcelonai utazás',to_date('25-MÁRC. -24','RR-MON-DD'));
-REM INSERTING into ERTEKELESEK
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('111','20','egy','keto',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('109','22','tesztmegegy','ezis',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('110','23','cicisnenik','beszedesanev',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('90','20','Állatok','Házi állatok',to_date('25-ÁPR.  -30','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('88','20','TestAlbum','testleiras',to_date('25-ÁPR.  -30','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('91','20','Tájképek','szép',to_date('25-ÁPR.  -30','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('89','20','Ételek','Street food',to_date('25-ÁPR.  -30','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('108','22','teeeszt','teeeszt',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('106','20','teszt','teeeeeszt',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('112','20','uj','odavanirva',to_date('25-MÁJ.  -03','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('147','20','valami','valami',to_date('25-MÁJ.  -08','RR-MON-DD'));
+Insert into C##X8TRB2.ALBUMOK (ALBUM_ID,FELHASZNALO_ID,NEV,LEIRAS,LETREHOZAS_DATUM) values ('127','20','testtest','valami',to_date('25-MÁJ.  -07','RR-MON-DD'));
+
+REM INSERTING into C##X8TRB2.ERTEKELESEK
 SET DEFINE OFF;
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('1','3','6','5',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('2','1','2','4',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('3','3','6','5',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('4','5','1','5',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('5','1','4','3',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('6','3','1','4',to_date('25-MÁRC. -24','RR-MON-DD'));
-REM INSERTING into FELHASZNALOK
+Insert into C##X8TRB2.ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('1','30','13','5',to_date('25-MÁJ.  -05','RR-MON-DD'));
+Insert into C##X8TRB2.ERTEKELESEK (ERTEKELES_ID,KEP_ID,FELHASZNALO_ID,PONTSZAM,ERTEKELES_DATUM) values ('2','31','13','2',to_date('25-MÁJ.  -05','RR-MON-DD'));
+REM INSERTING into C##X8TRB2.FELHASZNALOK
 SET DEFINE OFF;
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('1','Sanyika69','sanyika69@citromail.hu','MDBD7JS62D','1',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('2','Firestorm89','fire89@gmail.com','R7q8Bv6NyT','2',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('3','CyberNinja07','ninja07@webmail.com','K3x4Wm9ZtP','6',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('4','NagyEva32','nagy.eva32@freemail.hu','P6t3Xy9ZrM','9',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('5','FarkasDori25','farkas.d25@protonmail.com','K3p8Xt6ZyV','2',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM) values ('6','GalacticFox31','fox31@gmail.com','L5m9Xt7RpQ','11',to_date('25-MÁRC. -24','RR-MON-DD'));
-REM INSERTING into HOZZASZOLASOK
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('23','teeszt','teeszt@teeszt.teeszt','$2b$08$G6BSEVbEb.Q83GUMt81IJuwzgs/Pp6UKjf8peTNRmJtBBEOUTiUGi','2',to_date('25-MÁJ.  -03','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('13','andris','andris@andris.hu','$2b$08$SuyDA4Bs9tUkOC/frX2/0eRtnnCGdso7ayG4huzOJyuewxvRdAsWm','2',to_date('25-ÁPR.  -22','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('22','test','test@test.test','$2b$08$R4zaBfnpni8c1Bgu4aobguoBmr/5J8gutbN.Uw6bbsuQlFNgFZh3y','2',to_date('25-MÁJ.  -03','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('20','Bence','bence@admin.com','$2b$08$DiN8YmtKG9PUeWoVaFRinO5U4DGRJ8/CMhoRw3Ip8UeE1VjwQYKum','10',to_date('25-ÁPR.  -30','RR-MON-DD'),'admin');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('24','defaultUser','default@user.com','$2b$08$woMmNepeX.Ib1KW92j4SjO0S.DyznvtNO5h6zl.UhnldsxEhXyTqa','21',to_date('25-MÁJ.  -06','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('11','RegistTest','test@register.com','$2b$08$P4zsBbZqdPAYz8yqbDQHrOXtHBQ5GGkS4OJTX30fudVw07/Ryfuhi','2',to_date('25-ÁPR.  -21','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('9','adminHash','hash@admin.com','$2b$10$5PKLSLzsLTN1boIugaeWqu/m5NyB59WTjQya6oVf0t8Sr9dtXim8.','2',to_date('25-ÁPR.  -17','RR-MON-DD'),'admin');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('12','register','test@regist.com','$2b$08$OpPgnv.nLyLraQExeJUSJOD3ZVmwpoMQwr3JXQ9lku31xjC8ZXq9u','2',to_date('25-ÁPR.  -21','RR-MON-DD'),'user');
+Insert into C##X8TRB2.FELHASZNALOK (FELHASZNALO_ID,FELHASZNALONEV,EMAIL,JELSZO_HASH,VAROS_ID,REG_DATUM,ROLE) values ('10','testUser','user@test.com','$2b$08$wzIsulDAPmC/EVVomaYyMu1PtVcnusWb9LmjumT/1jnuIADxTCnG6','2',to_date('25-ÁPR.  -17','RR-MON-DD'),'user');
+REM INSERTING into C##X8TRB2.HOZZASZOLASOK
 SET DEFINE OFF;
-Insert into HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('1','3','1','Jaj de édes!',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('2','3','6','Megzabálom',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('3','5','1','Ezek voltak a szép idők',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('4','1','2','Nekem egy huskym van',to_date('25-MÁRC. -24','RR-MON-DD'));
-Insert into HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('5','3','1','Mennyi idős?',to_date('25-MÁRC. -24','RR-MON-DD'));
-REM INSERTING into KATEGORIAK
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('5','30','20','asd',to_date('25-MÁJ.  -07','RR-MON-DD'));
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('6','30','20','dsfsdgrg',to_date('25-MÁJ.  -07','RR-MON-DD'));
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('2','28','20','Comment',to_date('25-MÁJ.  -04','RR-MON-DD'));
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('3','29','20','Szép!',to_date('25-MÁJ.  -04','RR-MON-DD'));
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('4','30','20','Lazac',to_date('25-MÁJ.  -04','RR-MON-DD'));
+Insert into C##X8TRB2.HOZZASZOLASOK (HOZZASZOLAS_ID,KEP_ID,FELHASZNALO_ID,TARTALOM,DATUM) values ('1','25','20','Hello',to_date('25-MÁJ.  -04','RR-MON-DD'));
+REM INSERTING into C##X8TRB2.KATEGORIAK
 SET DEFINE OFF;
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('1','Tájkép');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('2','Portré');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('3','Természet');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('4','Építészet');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('5','Makró');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('6','Étel és ital');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('7','Éjszakai fotózás');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('8','Sport');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('9','Dokumentum');
-Insert into KATEGORIAK (KATEGORIA_ID,NEV) values ('10','Absztrakt');
-REM INSERTING into KEPEK
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('1','Tájkép');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('2','Portré');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('3','Természet');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('4','Építészet');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('5','Makró');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('6','Étel és ital');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('7','Éjszakai fotózás');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('8','Sport');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('9','Dokumentum');
+Insert into C##X8TRB2.KATEGORIAK (KATEGORIA_ID,NEV) values ('10','Absztrakt');
+REM INSERTING into C##X8TRB2.KEPEK
 SET DEFINE OFF;
-Insert into KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID) values ('1','3','3','Foltos01','Izgatott foltos',to_date('25-MÁRC. -24','RR-MON-DD'),'1');
-Insert into KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID) values ('2','3','3','Foltos02','Álmos foltos',to_date('25-MÁRC. -24','RR-MON-DD'),'2');
-Insert into KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID) values ('3','3','3','Foltos03','Baba foltos',to_date('25-MÁRC. -24','RR-MON-DD'),'3');
-Insert into KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID) values ('4','2','5','La Sagrada Familia','Elég menő',to_date('25-MÁRC. -24','RR-MON-DD'),'4');
-Insert into KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID) values ('5','1','2','Mamáék','Papa és mama tinédzserként',to_date('25-MÁRC. -24','RR-MON-DD'),'5');
-REM INSERTING into VAROSOK
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('27','20','90','Cicusok','Kis macskák',to_date('25-MÁJ.  -04','RR-MON-DD'),'3','1');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('29','20','90','Mókus','Mogyoró evő',to_date('25-MÁJ.  -04','RR-MON-DD'),'2','5');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('28','20','90','Elefánt','Békés',to_date('25-MÁJ.  -04','RR-MON-DD'),'2','4');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('25','20','88','Asztal','asdasc',to_date('25-ÁPR.  -30','RR-MON-DD'),'2','3');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('26','20','88','Monitor','asdasc',to_date('25-ÁPR.  -30','RR-MON-DD'),'3','1');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('24','20','88','Bombay','Gin',to_date('25-ÁPR.  -30','RR-MON-DD'),'2','6');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('30','20','89','Lazac','Füstölt lazac',to_date('25-MÁJ.  -04','RR-MON-DD'),'4','8');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('31','20','89','Zöldségek','Zöldség tál',to_date('25-MÁJ.  -04','RR-MON-DD'),'5','10');
+Insert into C##X8TRB2.KEPEK (KEP_ID,FELHASZNALO_ID,ALBUM_ID,CIM,LEIRAS,FELTOLTES_DATUM,HELYSZIN_VAROS_ID,KATEGORIA_ID) values ('32','20','89','Ebéd','Sült csirke',to_date('25-MÁJ.  -04','RR-MON-DD'),'1','1');
+
+REM INSERTING into C##X8TRB2.VAROSOK
 SET DEFINE OFF;
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('1','Etyek','Fejér','2091');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('2','Budapest','Pest','1011');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('3','Debrecen','Hajdú-Bihar','4024');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('4','Szeged','Csongrád-Csanád','6720');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('5','Miskolc','Borsod-Abaúj-Zemplén','3525');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('6','Pécs','Baranya','7621');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('7','Győr','Győr-Moson-Sopron','9021');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('8','Székesfehérvár','Fejér','8000');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('9','Nyíregyháza','Szabolcs-Szatmár-Bereg','4400');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('10','Kecskemét','Bács-Kiskun','6000');
-Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves','3300');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('13','Badacsony','Veszprém','6210');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('15','Vác','pest','3000');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('19',null,null,null);
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('21','testvaros','cscs','6724');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('18','EzazÚjneve','hb','1111');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('1','Etyek','Fejér','2091');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('2','Budapest','Pest','1011');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('3','Debrecen','Hajdú-Bihar','4024');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('4','Szeged','Csongrád-Csanád','6720');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('5','Miskolc','Borsod-Abaúj-Zemplén','3525');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('6','Pécs','Baranya','7621');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('7','Győr','Győr-Moson-Sopron','9021');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('8','Székesfehérvár','Fejér','8000');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('9','Nyíregyháza','Szabolcs-Szatmár-Bereg','4400');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('10','Kecskemét','Bács-Kiskun','6000');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','valami','bk','1234');
+Insert into C##X8TRB2.VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('20','Gyergyó','bp','1111');
+
 --------------------------------------------------------
 --  DDL for Index UNIQUE_KATEGORIA_NEV
 --------------------------------------------------------
@@ -453,6 +515,244 @@ Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves
   PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1
   BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
   TABLESPACE "USERS" ;
+--------------------------------------------------------
+--  DDL for Trigger FELHASZNALO_ID_TRIGGER
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "FELHASZNALO_ID_TRIGGER" 
+BEFORE INSERT ON felhasznalok
+FOR EACH ROW
+ WHEN (NEW.felhasznalo_id IS NULL) BEGIN
+  SELECT felhasznalo_seq.NEXTVAL
+  INTO :NEW.felhasznalo_id
+  FROM dual;
+END;
+/
+ALTER TRIGGER "FELHASZNALO_ID_TRIGGER" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger HOZZASZOLAS_ID_TRIGGER
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "HOZZASZOLAS_ID_TRIGGER" 
+BEFORE INSERT ON hozzaszolasok
+FOR EACH ROW
+ WHEN (NEW.hozzaszolas_id IS NULL) BEGIN
+  SELECT hozzaszolas_id_seq.NEXTVAL
+  INTO :NEW.hozzaszolas_id
+  FROM dual;
+END;
+/
+ALTER TRIGGER "HOZZASZOLAS_ID_TRIGGER" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger KEP_ID_TRIGGER
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "KEP_ID_TRIGGER" 
+BEFORE INSERT ON kepek
+FOR EACH ROW
+ WHEN (NEW.kep_id IS NULL) BEGIN
+  SELECT kep_id_seq.NEXTVAL INTO :NEW.kep_id FROM dual;
+END;
+/
+ALTER TRIGGER "KEP_ID_TRIGGER" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_ALBUM_CREATION_DATE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_ALBUM_CREATION_DATE" 
+BEFORE INSERT ON albumok
+FOR EACH ROW
+BEGIN
+  :NEW.letrehozas_datum := SYSDATE;
+END;
+
+/
+ALTER TRIGGER "TRG_ALBUM_CREATION_DATE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_ALBUM_ID
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_ALBUM_ID" 
+BEFORE INSERT ON albumok
+FOR EACH ROW
+BEGIN
+  :NEW.album_id := album_id_seq.NEXTVAL;
+END;
+/
+ALTER TRIGGER "TRG_ALBUM_ID" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_CHECK_COMMENT_CONTENT
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_CHECK_COMMENT_CONTENT" 
+BEFORE INSERT OR UPDATE ON "HOZZASZOLASOK"
+FOR EACH ROW
+BEGIN
+  IF TRIM(:NEW.tartalom) IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20001, 'A hozzászólás tartalma nem lehet üres!');
+  END IF;
+END;
+
+/
+ALTER TRIGGER "TRG_CHECK_COMMENT_CONTENT" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_CHECK_RATING_SCORE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_CHECK_RATING_SCORE" 
+BEFORE INSERT OR UPDATE ON ertekelesek
+FOR EACH ROW
+BEGIN
+  IF :NEW.pontszam NOT BETWEEN 1 AND 5 THEN
+    RAISE_APPLICATION_ERROR(-20002, 'Az értékelés pontszáma csak 1 és 5 között lehet!');
+  END IF;
+END;
+
+/
+ALTER TRIGGER "TRG_CHECK_RATING_SCORE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_COMMENT_DATE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_COMMENT_DATE" 
+BEFORE INSERT ON hozzaszolasok
+FOR EACH ROW
+BEGIN
+  :NEW.datum := SYSDATE;
+END;
+
+/
+ALTER TRIGGER "TRG_COMMENT_DATE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_EMAIL_TO_LOWER
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_EMAIL_TO_LOWER" 
+BEFORE INSERT OR UPDATE ON "FELHASZNALOK"
+FOR EACH ROW
+BEGIN
+  :NEW.email := LOWER(:NEW.email);
+END;
+
+/
+ALTER TRIGGER "TRG_EMAIL_TO_LOWER" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_IMAGE_TITLE_NOT_NULL
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_IMAGE_TITLE_NOT_NULL" 
+BEFORE INSERT OR UPDATE ON kepek
+FOR EACH ROW
+BEGIN
+  IF TRIM(:NEW.cim) IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20004, 'A kép címe kötelező!');
+  END IF;
+END;
+
+/
+ALTER TRIGGER "TRG_IMAGE_TITLE_NOT_NULL" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_IMAGE_UPLOAD_DATE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_IMAGE_UPLOAD_DATE" 
+BEFORE INSERT ON kepek
+FOR EACH ROW
+BEGIN
+  :NEW.feltoltes_datum := SYSDATE;
+END;
+
+/
+ALTER TRIGGER "TRG_IMAGE_UPLOAD_DATE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_RATING_DATE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_RATING_DATE" 
+BEFORE INSERT ON ertekelesek
+FOR EACH ROW
+BEGIN
+  :NEW.ertekeles_datum := SYSDATE;
+END;
+
+/
+ALTER TRIGGER "TRG_RATING_DATE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger TRG_USER_REGISTRATION_DATE
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "TRG_USER_REGISTRATION_DATE" 
+BEFORE INSERT ON felhasznalok
+FOR EACH ROW
+BEGIN
+  :NEW.reg_datum := SYSDATE;
+END;
+
+/
+ALTER TRIGGER "TRG_USER_REGISTRATION_DATE" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger VAROS_ID_TRIGGER
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "VAROS_ID_TRIGGER" 
+BEFORE INSERT ON varosok
+FOR EACH ROW
+ WHEN (NEW.varos_id IS NULL) BEGIN
+  SELECT varos_id_seq.NEXTVAL
+  INTO :NEW.varos_id
+  FROM dual;
+END;
+/
+ALTER TRIGGER "VAROS_ID_TRIGGER" ENABLE;
+--------------------------------------------------------
+--  DDL for Procedure HOZZASZOLAS_HOZZAADASA
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "HOZZASZOLAS_HOZZAADASA" (
+    p_kep_id IN NUMBER,
+    p_felhasznalo_id IN NUMBER,
+    p_tartalom IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO hozzaszolasok (
+        hozzaszolas_id, kep_id, felhasznalo_id, tartalom, datum
+    ) VALUES (
+        hozzaszolas_id_seq.NEXTVAL, p_kep_id, p_felhasznalo_id, p_tartalom, SYSDATE
+    );
+END;
+
+/
+--------------------------------------------------------
+--  DDL for Procedure UJ_ALBUM_LETREHOZAS
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "UJ_ALBUM_LETREHOZAS" (
+    p_felhasznalo_id IN NUMBER,
+    p_nev IN VARCHAR2,
+    p_leiras IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO albumok (
+        album_id, felhasznalo_id, nev, leiras, letrehozas_datum
+    ) VALUES (
+        album_id_seq.NEXTVAL, p_felhasznalo_id, p_nev, p_leiras, SYSDATE
+    );
+END;
+
+/
+--------------------------------------------------------
+--  Constraints for Table SZEMELYEK
+--------------------------------------------------------
+
+  ALTER TABLE "SZEMELYEK" MODIFY ("SZIGSZ" NOT NULL ENABLE);
+  ALTER TABLE "SZEMELYEK" ADD PRIMARY KEY ("SZIGSZ")
+  USING INDEX PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
+  PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1
+  BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
+  TABLESPACE "USERS"  ENABLE;
 --------------------------------------------------------
 --  Constraints for Table VAROSOK
 --------------------------------------------------------
@@ -475,7 +775,6 @@ Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves
 --------------------------------------------------------
 
   ALTER TABLE "KEPEK" MODIFY ("KEP_ID" NOT NULL ENABLE);
-  ALTER TABLE "KEPEK" MODIFY ("FELHASZNALO_ID" NOT NULL ENABLE);
   ALTER TABLE "KEPEK" ADD PRIMARY KEY ("KEP_ID")
   USING INDEX PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
   STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
@@ -495,6 +794,7 @@ Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves
   PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1
   BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
   TABLESPACE "USERS"  ENABLE;
+
 --------------------------------------------------------
 --  Constraints for Table ERTEKELESEK
 --------------------------------------------------------
@@ -544,6 +844,7 @@ Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves
 
   ALTER TABLE "FELHASZNALOK" ADD CONSTRAINT "CHECK_EMAIL_NOT_NULL" CHECK ("EMAIL" IS NOT NULL) ENABLE;
   ALTER TABLE "FELHASZNALOK" ADD CONSTRAINT "CHECK_FELHASZNALO_NEV_NOT_NULL" CHECK ("FELHASZNALONEV" IS NOT NULL) ENABLE;
+  ALTER TABLE "FELHASZNALOK" ADD CONSTRAINT "CHK_ROLE" CHECK (role IN ('admin', 'user')) ENABLE;
   ALTER TABLE "FELHASZNALOK" MODIFY ("FELHASZNALO_ID" NOT NULL ENABLE);
   ALTER TABLE "FELHASZNALOK" ADD PRIMARY KEY ("FELHASZNALO_ID")
   USING INDEX PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
@@ -563,41 +864,45 @@ Insert into VAROSOK (VAROS_ID,NEV,MEGYE,IRANYITOSZAM) values ('11','Eger','Heves
   PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1
   BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
   TABLESPACE "USERS"  ENABLE;
+
 --------------------------------------------------------
 --  Ref Constraints for Table ALBUMOK
 --------------------------------------------------------
 
-  ALTER TABLE "ALBUMOK" ADD CONSTRAINT "FK_FELHASZNALOID" FOREIGN KEY ("FELHASZNALO_ID")
-	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE CASCADE ENABLE;
+  ALTER TABLE "ALBUMOK" ADD CONSTRAINT "FK_ALBUMOK_FELHASZNALOID" FOREIGN KEY ("FELHASZNALO_ID")
+	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE SET NULL ENABLE;
+
 --------------------------------------------------------
 --  Ref Constraints for Table ERTEKELESEK
 --------------------------------------------------------
 
   ALTER TABLE "ERTEKELESEK" ADD CONSTRAINT "FK_FELHASZNALO_ID" FOREIGN KEY ("FELHASZNALO_ID")
-	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE CASCADE ENABLE;
+	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE SET NULL ENABLE;
   ALTER TABLE "ERTEKELESEK" ADD CONSTRAINT "FK_KEP_ID" FOREIGN KEY ("KEP_ID")
-	  REFERENCES "KEPEK" ("KEP_ID") ENABLE;
+	  REFERENCES "KEPEK" ("KEP_ID") ON DELETE SET NULL ENABLE;
 --------------------------------------------------------
 --  Ref Constraints for Table FELHASZNALOK
 --------------------------------------------------------
 
   ALTER TABLE "FELHASZNALOK" ADD CONSTRAINT "FK_VAROS_ID" FOREIGN KEY ("VAROS_ID")
-	  REFERENCES "VAROSOK" ("VAROS_ID") ENABLE;
+	  REFERENCES "VAROSOK" ("VAROS_ID") ON DELETE SET NULL ENABLE;
 --------------------------------------------------------
 --  Ref Constraints for Table HOZZASZOLASOK
 --------------------------------------------------------
 
   ALTER TABLE "HOZZASZOLASOK" ADD CONSTRAINT "FK_HOZZASZOLAS_FELHASZNALOID" FOREIGN KEY ("FELHASZNALO_ID")
-	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE CASCADE ENABLE;
+	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE SET NULL ENABLE;
   ALTER TABLE "HOZZASZOLASOK" ADD CONSTRAINT "FK_HOZZASZOL_KEPID" FOREIGN KEY ("KEP_ID")
-	  REFERENCES "KEPEK" ("KEP_ID") ENABLE;
+	  REFERENCES "KEPEK" ("KEP_ID") ON DELETE SET NULL ENABLE;
 --------------------------------------------------------
 --  Ref Constraints for Table KEPEK
 --------------------------------------------------------
 
   ALTER TABLE "KEPEK" ADD CONSTRAINT "FK_KEPEK_ALBUMID" FOREIGN KEY ("ALBUM_ID")
-	  REFERENCES "ALBUMOK" ("ALBUM_ID") ON DELETE CASCADE ENABLE;
+	  REFERENCES "ALBUMOK" ("ALBUM_ID") ON DELETE SET NULL ENABLE;
   ALTER TABLE "KEPEK" ADD CONSTRAINT "FK_KEPEK_FELHASZNALOID" FOREIGN KEY ("FELHASZNALO_ID")
-	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE CASCADE ENABLE;
+	  REFERENCES "FELHASZNALOK" ("FELHASZNALO_ID") ON DELETE SET NULL ENABLE;
+  ALTER TABLE "KEPEK" ADD CONSTRAINT "FK_KEPEK_KATEGORIA_ID" FOREIGN KEY ("KATEGORIA_ID")
+	  REFERENCES "KATEGORIAK" ("KATEGORIA_ID") ON DELETE SET NULL ENABLE;
   ALTER TABLE "KEPEK" ADD CONSTRAINT "FK_KEPEK_VAROSID" FOREIGN KEY ("HELYSZIN_VAROS_ID")
-	  REFERENCES "VAROSOK" ("VAROS_ID") ENABLE;
+	  REFERENCES "VAROSOK" ("VAROS_ID") ON DELETE SET NULL ENABLE;

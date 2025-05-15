@@ -33,8 +33,6 @@ const Home = () => {
   const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
-    console.log("api hivas")
-
     fetch("http://localhost:4000/api/get/albumok")
       .then((res) => res.json())
       .then((data) => {
@@ -59,7 +57,9 @@ const Home = () => {
           setCategories([]);
         }
       })
-      .catch((error) => console.error("Kategóriák lekérése sikertelen:", error));
+      .catch((error) =>
+        console.error("Kategóriák lekérése sikertelen:", error)
+      );
   }, []);
 
   // Lokális tároló frissítése, ha a hozzászólások és értékelések még nem léteznek
@@ -169,6 +169,7 @@ const Home = () => {
     const raw = JSON.stringify({
       nev: albumData.name,
       leiras: albumData.description,
+      id: user.id,
     });
 
     const requestOptions = {
@@ -304,7 +305,10 @@ const Home = () => {
                           Válassz kategóriát
                         </option>
                         {categories.map((category) => (
-                          <option key={category.KATEGORIA_ID} value={category.KATEGORIA_ID}>
+                          <option
+                            key={category.KATEGORIA_ID}
+                            value={category.KATEGORIA_ID}
+                          >
                             {category.NEV}
                           </option>
                         ))}

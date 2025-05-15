@@ -12,7 +12,7 @@ const Albums = () => {
   const [editData, setEditData] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
-  const { isLoggedIn, isAdmin } = useAuth();
+  const { isLoggedIn, isAdmin, user } = useAuth();
 
   const fetchAlbums = async () => {
     try {
@@ -119,6 +119,7 @@ const Albums = () => {
         body: JSON.stringify({
           nev: formData.name,
           leiras: formData.description,
+          id: user.id,
         }),
       });
 

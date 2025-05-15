@@ -27,7 +27,6 @@ function TileList({ refreshTrigger, onImageClick }) {
       setIsLoading(false);
     } else {
       fetchTiles();
-      console.log("api hivas");
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

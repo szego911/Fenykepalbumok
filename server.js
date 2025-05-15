@@ -121,7 +121,7 @@ app.get("/api/get/ertekelesek", async (req, res) => {
   }
 });
 
-app.get("/api/get/tabel/:tableName", async (req, res) => {
+app.get("/api/get/table/:tableName", async (req, res) => {
   const { tableName } = req.params;
 
   if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
@@ -394,7 +394,7 @@ app.get("/api/users", async (req, res) => {
 
     await conn.close();
 
-    const users = result.rows.map(user => ({
+    const users = result.rows.map((user) => ({
       id: user.FELHASZNALO_ID,
       nev: user.FELHASZNALONEV,
       email: user.EMAIL,
@@ -409,7 +409,6 @@ app.get("/api/users", async (req, res) => {
     res.status(500).send("Hiba: Nem sikerült lekérni a felhasználókat");
   }
 });
-
 
 //KEPEK
 
@@ -694,8 +693,7 @@ app.patch(
 //ALBUMOK
 
 app.post("/api/create/album", async (req, res) => {
-  const { nev, leiras } = req.body;
-  const felhasznalo_id = "20";
+  const { nev, leiras, id } = req.body;
   try {
     const conn = await connectDB();
 
@@ -703,7 +701,7 @@ app.post("/api/create/album", async (req, res) => {
       `BEGIN
          uj_album_letrehozas(:felhasznalo_id, :nev, :leiras);
        END;`,
-      { felhasznalo_id, nev, leiras },
+      { id, nev, leiras },
       { autoCommit: true }
     );
 

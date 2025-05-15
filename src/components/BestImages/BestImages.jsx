@@ -46,7 +46,7 @@ const BestImages = () => {
     if (users.length > 0) {
       setLoading3(false);
     }
-    //fetchBestImages();
+    fetchBestImages();
     fetchCityImages(selectedCityId);
     fetchTopUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
