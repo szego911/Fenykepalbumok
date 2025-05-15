@@ -427,39 +427,50 @@ const Home = () => {
                 </div>
                 <div className="comment-section w-50 ps-3 overflow-auto">
                   <h4 className="mb-3">Hozzászólások és Értékelések</h4>
-                  {comments.length === 0 ? (
-                    <p>Nincsenek hozzászólások.</p>
+                  {comments ? (
+                    comments.length === 0 ? (
+                      <p>Nincsenek hozzászólások.</p>
+                    ) : (
+                      comments.map((c, i) => (
+                        <div key={i} className="mb-2 p-2 border-bottom">
+                          <strong>
+                            {c.FELHASZNALONEV ||
+                              `Felhasználó #${c.FELHASZNALO_ID}`}
+                          </strong>{" "}
+                          <span className="text-muted">
+                            {new Date(formatDate(c.DATUM)).toLocaleString()}
+                          </span>
+                          <p className="m-0">{c.TARTALOM}</p>
+                        </div>
+                      ))
+                    )
                   ) : (
-                    comments.map((c, i) => (
-                      <div key={i} className="mb-2 p-2 border-bottom">
-                        <strong>
-                          {c.FELHASZNALONEV ||
-                            `Felhasználó #${c.FELHASZNALO_ID}`}
-                        </strong>{" "}
-                        <span className="text-muted">
-                          {new Date(formatDate(c.DATUM)).toLocaleString()}
-                        </span>
-                        <p className="m-0">{c.TARTALOM}</p>
-                      </div>
-                    ))
+                    <p>Betöltés...</p>
                   )}
 
-                  {ratings.length === 0 ? (
-                    <p>Még nincs értékelés.</p>
+                  {ratings ? (
+                    ratings.length === 0 ? (
+                      <p>Még nincs értékelés.</p>
+                    ) : (
+                      ratings.map((r, i) => (
+                        <div key={i} className="mb-2 p-2">
+                          <strong>
+                            {r.FELHASZNALONEV ||
+                              `Felhasználó #${r.FELHASZNALO_ID}`}
+                          </strong>{" "}
+                          <span className="text-muted">
+                            {new Date(r.ERTEKELES_DATUM).toLocaleString()}
+                          </span>
+                          <h3 className="mt-3">Pontszám: {r.PONTSZAM}/5</h3>
+                        </div>
+                      ))
+                    )
                   ) : (
-                    ratings.map((r, i) => (
-                      <div key={i} className="mb-2 p-2 border-bottom">
-                        <strong>
-                          {r.FELHASZNALONEV ||
-                            `Felhasználó #${r.FELHASZNALO_ID}`}
-                        </strong>{" "}
-                        <span className="text-muted">
-                          {new Date(r.ERTEKELES_DATUM).toLocaleString()}
-                        </span>
-                        <p className="m-0">Pontszám: {r.PONTSZAM}/5</p>
-                      </div>
-                    ))
+                    <p>Betöltés...</p>
                   )}
+                  <div>
+                    <h3>Város: {selectedImage.VAROS_NEV}</h3>
+                  </div>
                   <div className="d-flex justify-content-end mt-3">
                     <button
                       className="btn btn-secondary"
