@@ -27,7 +27,7 @@ const Albums = () => {
 
   useEffect(() => {
     fetchAlbums();
-  }, [isLoggedIn]);
+  }, []);
 
   if (!isLoggedIn) {
     return (
@@ -153,9 +153,9 @@ const Albums = () => {
         ) : (
           <div className="albums-list">
             {albums.map((album) => (
-              <div key={album.ALBUM_ID} className="album-item">
-                <h3>{album.NEV}</h3>
-                <p>{album.LEIRAS}</p>
+              <div key={album.id} className="album-item">
+                <h3>{album.nev}</h3>
+                <p>{album.leiras}</p>
                 {isAdmin ? (
                   <div className="album-actions">
                     <button

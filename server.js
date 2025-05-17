@@ -831,7 +831,14 @@ app.get("/api/get/albumok", async (req, res) => {
     const conn = await connectDB();
     const result = await conn.execute("SELECT * FROM albumok");
     await conn.close();
-    res.json(result.rows);
+
+    const albums = result.rows.map((row) => ({
+      id: row[0],
+      userId: row[1],
+      nev: row[2],
+      leiras: row[3],
+    }));
+    res.json(albums);
   } catch (err) {
     console.error("Hiba a albumok lekérésekor:", err);
     res.status(500).json({ error: "Hiba a albumok lekérésekor" });
@@ -1285,7 +1292,7 @@ app.post("/api/imagesWithCommentsFromCity", async (req, res) => {
   }
 });
 
-//Felhasználók, akiknek az albumjaiban a képekre legalább 10 értékelés érkezett átlagosan
+//Felhasználók, akiknek az albumjaiban a képekre legalább 2 értékelés érkezett átlagosan
 app.get("/api/usersWithAvgRatingOver2", async (req, res) => {
   try {
     const conn = await connectDB();
@@ -1306,6 +1313,99 @@ app.get("/api/usersWithAvgRatingOver2", async (req, res) => {
   } catch (err) {
     console.error("Hiba az értékelések lekérdezésekor:", err);
     res.status(500).json({ message: "Lekérdezési hiba", error: err });
+  }
+});
+
+//Lekérdezés célja: kik azok a felhasználók, akik legalább 3 képet töltöttek fel?
+
+app.get("/api/usersWithMin3Images", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT f.felhasznalonev AS FELHASZNALONEV, COUNT(k.kep_id) AS KEPEK_SZAMA
+       FROM felhasznalok f
+       JOIN kepek k ON k.felhasznalo_id = f.felhasznalo_id
+       GROUP BY f.felhasznalonev
+       HAVING COUNT(k.kep_id) >= 3`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a felhasználók lekérdezésekor:", err);
+    res.status(500).json({ error: "Lekérdezési hiba", err });
+  }
+});
+
+//Legnépszerűbb kategóriák képszáma szerint
+
+app.get("/api/topCategoriesByImageCount", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT kat.NEV AS KATEGORIA, COUNT(k.KEP_ID) AS KEPEK_SZAMA
+       FROM kategoriak kat
+       LEFT JOIN kepek k ON k.KATEGORIA_ID = kat.KATEGORIA_ID
+       GROUP BY kat.NEV
+       ORDER BY KEPEK_SZAMA DESC`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a kategóriák lekérdezésekor:", err);
+    res.status(500).json({ error: "Lekérdezési hiba", err });
+  }
+});
+
+//Képek címe és hozzászólások száma képenként
+
+app.get("/api/imageCommentCounts", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT k.cim AS CIM, COUNT(h.hozzaszolas_id) AS HOZZASZOLASOK_SZAMA
+       FROM kepek k
+       LEFT JOIN hozzaszolasok h ON k.kep_id = h.kep_id
+       GROUP BY k.cim`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a képek hozzászólásainak lekérdezésekor:", err);
+    res.status(500).json({ error: "Lekérdezési hiba", err });
+  }
+});
+
+//Lekérdezés célja: képek és hozzájuk tartozó átlagos értékelés, csak ahol már értékelték.
+
+app.get("/api/imagesWithAvgRating", async (req, res) => {
+  try {
+    const conn = await connectDB();
+
+    const result = await conn.execute(
+      `SELECT 
+         k.KEP_ID,
+         k.CIM,
+         ROUND(AVG(e.PONTSZAM), 2) AS ATLAG_ERTEKELES
+       FROM kepek k
+       JOIN ertekelesek e ON e.KEP_ID = k.KEP_ID
+       GROUP BY k.KEP_ID, k.CIM`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a képek értékeléseinek lekérdezésekor:", err);
+    res.status(500).json({ error: "Lekérdezési hiba", err });
   }
 });
 
@@ -1382,6 +1482,58 @@ app.get("/api/citiesWithMinCommentsImages", async (req, res) => {
     res.status(500).json({
       message: "Hiba a város képeinek lekérdezésekor",
       error: err,
+    });
+  }
+});
+
+//Albumok és hozzájuk tartozó képek száma
+
+app.get("/api/albumImageCounts", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT a.nev AS ALBUM_NEV, COUNT(k.kep_id) AS KEPEK_SZAMA
+       FROM albumok a
+       LEFT JOIN kepek k ON a.album_id = k.album_id
+       GROUP BY a.nev`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba az album képszám lekérdezésekor:", err);
+    res.status(500).json({ error: "Lekérdezési hiba", err });
+  }
+});
+
+//Képek címe, kategórianév és hozzászólások száma, csak ahol több mint 2 hozzászólás van
+
+app.get("/api/imagesWithMoreThan2Comments", async (req, res) => {
+  try {
+    const conn = await connectDB();
+    const result = await conn.execute(
+      `SELECT 
+         k.cim AS CIM,
+         kat.nev AS KATEGORIA,
+         COUNT(h.hozzaszolas_id) AS HOZZASZOLAS_DB
+       FROM kepek k
+       JOIN hozzaszolasok h ON k.kep_id = h.kep_id
+       JOIN kategoriak kat ON k.kategoria_id = kat.kategoria_id
+       GROUP BY k.cim, kat.nev
+       HAVING COUNT(h.hozzaszolas_id) > 2`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    await conn.close();
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Hiba a képek lekérdezésekor (2+ hozzászólás):", err);
+    res.status(500).json({
+      error: "Lekérdezési hiba a képeknél több mint 2 hozzászólással",
+      err,
     });
   }
 });
