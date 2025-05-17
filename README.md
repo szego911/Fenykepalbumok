@@ -23,17 +23,15 @@ A`server.js` fájlban található az összes api endpoint.
 
 ## 📸 KÉPEK
 
-| Endpoint                                | Leírás                                                              | Típus  | Paraméterek                             | Válasz                              |
-| :-------------------------------------- | :------------------------------------------------------------------ | :----- | :-------------------------------------- | :---------------------------------- |
-| GET /api/allImages                      | Minden kép lekérdezése album és városnévvel, BLOB konvertálással.   | GET    | -                                       | Képek adatai (base64-es képmezővel) |
-| POST /api/upload/image                  | Kép feltöltése a megadott adatokkal.                                | POST   | multipart/form-data                     | Feltöltés eredménye                 |
-| GET /api/get/kep/:id                    | Kép lekérése azonosító alapján, kép megjelenítése JPEG-ként.        | GET    | id (param)                              | Kép bináris adatként                |
-| DELETE /api/delete/kep/:id              | Kép törlése azonosító alapján.                                      | DELETE | id (param)                              | Törlés státusza                     |
-| PUT /api/update/kep/:id                 | Kép adatainak teljes frissítése.                                    | PUT    | id (param), minden képmező + kép (body) | Frissítés státusza                  |
-| PATCH /api/updatePatch/kep/:id          | Kép részleges frissítése.                                           | PATCH  | id (param), tetszőleges mezők           | Frissítés státusza                  |
-| GET /api/topCommentedImages             | Legtöbb hozzászólással rendelkező képek (TOP 5).                    | GET    | -                                       | Kép objektumok BLOB-bal együtt      |
-| POST /api/imagesWithCommentsFromCity    | Képek lekérése, amik adott városban készültek és van hozzászólásuk. | POST   | cityId (body)                           | Kép objektumok (BLOB-bal)           |
-| GET /api/imagesByCategory/:kategoria_id | Kategória alapján képek lekérdezése, BLOB-bal együtt.               | GET    | kategoria_id (param)                    | Kép objektumok                      |
+| Endpoint                                | Leírás                                                            | Típus  | Paraméterek                             | Válasz                              |
+| :-------------------------------------- | :---------------------------------------------------------------- | :----- | :-------------------------------------- | :---------------------------------- |
+| GET /api/allImages                      | Minden kép lekérdezése album és városnévvel, BLOB konvertálással. | GET    | -                                       | Képek adatai (base64-es képmezővel) |
+| POST /api/upload/image                  | Kép feltöltése a megadott adatokkal.                              | POST   | multipart/form-data                     | Feltöltés eredménye                 |
+| GET /api/get/kep/:id                    | Kép lekérése azonosító alapján, kép megjelenítése JPEG-ként.      | GET    | id (param)                              | Kép bináris adatként                |
+| DELETE /api/delete/kep/:id              | Kép törlése azonosító alapján.                                    | DELETE | id (param)                              | Törlés státusza                     |
+| PUT /api/update/kep/:id                 | Kép adatainak teljes frissítése.                                  | PUT    | id (param), minden képmező + kép (body) | Frissítés státusza                  |
+| PATCH /api/updatePatch/kep/:id          | Kép részleges frissítése.                                         | PATCH  | id (param), tetszőleges mezők           | Frissítés státusza                  |
+| GET /api/imagesByCategory/:kategoria_id | Kategória alapján képek lekérdezése, BLOB-bal együtt.             | GET    | kategoria_id (param)                    | Kép objektumok                      |
 
 ## 👤 FELHASZNÁLÓK
 
@@ -48,17 +46,17 @@ A`server.js` fájlban található az összes api endpoint.
 
 ## 💬 HOZZÁSZÓLÁSOK
 
-| Endpoint                               | Leírás                                                    | Típus | Paraméterek                             | Válasz                         |
-| :------------------------------------- | :-------------------------------------------------------- | :---- | :-------------------------------------- | :----------------------------- |
-| GET /api/get/hozzaszolasok?kep_id=<id> | Lekérdezi egy adott kép hozzászólásait felhasználónévvel. | GET   | kep_id (query)                          | Hozzászólás objektumok listája |
-| POST /api/create/hozzaszolas           | Új hozzászólás hozzáadása tárolt eljárással.              | POST  | kep_id, felhasznalo_id, tartalom (body) | Sikeres létrehozás üzenet      |
+| Endpoint                           | Leírás                                              | Típus  | Paraméterek                             | Válasz                 |
+| :--------------------------------- | :-------------------------------------------------- | :----- | :-------------------------------------- | :--------------------- |
+| POST /api/create/hozzaszolas       | Új hozzászólás létrehozása (pl. tárolt eljárással). | POST   | kep_id, felhasznalo_id, tartalom (body) | Siker vagy hiba üzenet |
+| DELETE /api/delete/hozzaszolas/:id | Hozzászólás törlése azonosító alapján.              | DELETE | id (URL paraméter)                      | Siker vagy hiba üzenet |
+| PATCH /api/update/hozzaszolas/:id  | Hozzászólás részleges frissítése.                   | PATCH  | id (URL paraméter), mezők (body)        | Siker vagy hiba üzenet |
 
 ## ⭐ ÉRTÉKELÉSEK
 
-| Endpoint                             | Leírás                                                              | Típus | Paraméterek    | Válasz                           |
-| :----------------------------------- | :------------------------------------------------------------------ | :---- | :------------- | :------------------------------- |
-| GET /api/get/ertekelesek?kep_id=<id> | Lekérdezi egy adott kép értékeléseit felhasználónévvel.             | GET   | kep_id (query) | Értékelés objektumok listája     |
-| GET /api/usersWithAvgRatingOver2     | Felhasználók, akik albumjaik képeire 2-nél több értékelés érkezett. | GET   | -              | Felhasználónév és átlagértékelés |
+| Endpoint                        | Leírás                                                  | Típus | Paraméterek            | Válasz                       |
+| :------------------------------ | :------------------------------------------------------ | :---- | :--------------------- | :--------------------------- |
+| GET /api/get/ertekelesek/:kepId | Lekérdezi egy adott kép értékeléseit felhasználónévvel. | GET   | kep_id (URL paraméter) | Értékelés objektumok listája |
 
 ## 📁 ALBUMOK
 
@@ -69,10 +67,12 @@ A`server.js` fájlban található az összes api endpoint.
 
 ## 🏙️ VÁROSOK
 
-| Endpoint                             | Leírás                                                   | Típus | Paraméterek | Válasz                                |
-| :----------------------------------- | :------------------------------------------------------- | :---- | :---------- | :------------------------------------ |
-| GET /api/citiesWithMinCommentsImages | Városok, ahol a képekre legalább 5 hozzászólás érkezett. | GET   | -           | Kép objektumok a megfelelő városokból |
-| GET /api/varosok                     | Városok listájának lekérdezése (ID és név).              | GET   | -           | Városok listája                       |
+| Endpoint                     | Leírás                                    | Típus  | Paraméterek                      | Válasz                       |
+| :--------------------------- | :---------------------------------------- | :----- | :------------------------------- | :--------------------------- |
+| POST /api/create/varos       | Új város létrehozása.                     | POST   | nev, megye, iranyitoszam (body)  | Siker vagy hiba üzenet       |
+| GET /api/varosok             | Városok listázása névvel és azonosítóval. | GET    | -                                | Városok tömb (varos_id, nev) |
+| DELETE /api/delete/varos/:id | Város törlése azonosító alapján.          | DELETE | id (URL paraméter)               | Siker vagy hiba üzenet       |
+| PATCH /api/update/varos/:id  | Város adatainak részleges frissítése.     | PATCH  | id (URL paraméter), mezők (body) | Siker vagy hiba üzenet       |
 
 ## 🏷️ KATEGÓRIÁK
 
@@ -80,15 +80,21 @@ A`server.js` fájlban található az összes api endpoint.
 | :---------------------- | :---------------------------- | :---- | :---------- | :------------------ |
 | GET /api/get/categories | Minden kategória lekérdezése. | GET   | -           | Kategória ID és név |
 
-## 🧪 EGYÉB / TESZT / TÁBLALEKÉRDEZÉS
+## 📸 Összetett lekérdezések
 
-| Endpoint                      | Leírás                                             | Típus | Paraméterek       | Válasz                   |
-| :---------------------------- | :------------------------------------------------- | :---- | :---------------- | :----------------------- |
-| GET /api/get/table/:tableName | Bármely tábla tartalmának lekérdezése név alapján. | GET   | tableName (param) | Tábla sorai objektumként |
+| Endpoint                                | Leírás                                                                | Típus | Paraméterek       | Válasz                               |
+| :-------------------------------------- | :-------------------------------------------------------------------- | :---- | :---------------- | :----------------------------------- |
+| GET /api/topCommentedImages             | Legtöbb hozzászólással rendelkező képek (TOP 5).                      | GET   | -                 | Kép objektumok BLOB-bal együtt       |
+| POST /api/imagesWithCommentsFromCity    | Képek lekérése adott városból, ahol van hozzászólás.                  | POST  | cityId (body)     | Kép objektumok (BLOB-bal)            |
+| GET /api/usersWithAvgRatingOver2        | Felhasználók, akik képeire átlagosan legalább 2 értékelés érkezett.   | GET   | -                 | Felhasználónév és átlag értékelés    |
+| GET /api/usersWithMin3Images            | Felhasználók, akik legalább 3 képet töltöttek fel.                    | GET   | -                 | Felhasználónév és képek száma        |
+| GET /api/topCategoriesByImageCount      | Legnépszerűbb kategóriák képszám szerint.                             | GET   | -                 | Kategória neve, képek száma          |
+| GET /api/imageCommentCounts             | Képek címe és hozzászólások száma képenként.                          | GET   | -                 | Kép címe és hozzászólások darabszáma |
+| GET /api/imagesWithAvgRating            | Képek és hozzájuk tartozó átlagos értékelés (csak ahol van értékelés) | GET   | -                 | Kép címe és átlag értékelés          |
+| GET /api/imagesByCategory/:kategoria_id | Képek kategória id alapján                                            | POST  | categoryId (body) | Kép objektumok BLOB-bal együtt       |
 
 Style: Bootstrap -> https://getbootstrap.com/docs/5.3/getting-started/introduction/
 Egész componensek amiket használhattok: https://mui.com/toolpad/core/all-components/
 vagy pl: https://getbootstrap.com/docs/5.3/components/card/
 React amit tudni érdemes: https://www.w3schools.com/react/default.asp
 React specifikus dolgok: https://www.w3schools.com/react/react_hooks.asp
-
